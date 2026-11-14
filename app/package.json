@@ -16,6 +16,7 @@
     "verify:hands": "bash scripts/verify-hands.sh",
     "verify:anatomy": "bash scripts/verify-anatomy.sh",
     "test": "vitest run",
+    "demo:consultation": "node scripts/demo-consultation.mjs",
     "verify:production": "node scripts/verify-production.mjs"
   },
   "dependencies": {

@@ -207,3 +207,41 @@ environment. `httpx` 0.28.1 remains installed and unaffected.
    observation, history kept, no duplicate). Observations from different sources are never merged.
 
 `DOCTOR_CONFIRMED` still comes only from an explicit doctor action. A doctor's utterance never infers it.
+
+## 16. Milestone 4: scripted provider and session machine (implemented)
+
+Code: `app/src/consult/{core,session,transcription,extraction,testing,demo}`. No spatial UI, microphone, TTS or command routing.
+
+**Three independent regions** (`session/session-machine.ts`, pure, never throws; an invalid event returns `INVALID_TRANSITION` and leaves state untouched):
+
+| Region | States | Notes |
+|---|---|---|
+| lifecycle | IDLE, STARTING, LISTENING, PAUSED, ENDED, FAILED | input side |
+| extraction | requests in flight (counter), succeeded, failed, lastError | may start while PAUSED and drains after ENDED/FAILED |
+| speaking | IDLE, SPEAKING | independent of both others; wired in Milestone 8 |
+
+**Lifecycle transitions**
+
+| From | Event | To |
+|---|---|---|
+| IDLE | START | STARTING |
+| STARTING | PROVIDER_STARTED | LISTENING |
+| STARTING | PROVIDER_FAILED | FAILED |
+| STARTING | END | ENDED |
+| LISTENING | PAUSE | PAUSED |
+| LISTENING | END | ENDED |
+| LISTENING | PROVIDER_FAILED (non-fatal / fatal) | PAUSED / FAILED |
+| PAUSED | RESUME | LISTENING |
+| PAUSED | END | ENDED |
+| PAUSED | PROVIDER_FAILED (non-fatal / fatal) | PAUSED / FAILED |
+| FAILED | START (retry, clears failure) | STARTING |
+| FAILED | END | ENDED |
+| ENDED | any | terminal |
+
+`INPUT_EXHAUSTED` (a finite script has delivered everything) is valid only in LISTENING or PAUSED and does not change the lifecycle. Other events are invalid in every other state.
+
+**Pipeline**: provider events -> session -> finals (deduplicated by utterance id, validated) -> batches -> sequential extraction queue -> backend -> append-only store. A batch flushes after a PATIENT final, after a quiet window (restarted by speech activity), on `exhausted` and on `end`. Extraction is one request at a time, with fresh known observations and the preceding utterances as context; retriable failures back off and retry up to 3 times, others are recorded and can be retried with `retryFailed()`. Duplicate responses (same `extraction_id`) are applied once.
+
+**Replay status**: the banner always carries the input label and the extraction mode (`REPLAY_FIXTURE`, `LIVE_MODEL`, `MIXED`, or not contacted). Replay is sticky: a single replayed response is never reported as live.
+
+**Demo**: `cd app && npm run demo:consultation -- --speed=25 [--pause-demo] [--backend=http://127.0.0.1:8000]`. Without `--backend` it uses offline recorded fixtures. Backend integration test: `MEDSCOPE_BACKEND_URL=... npx vitest run src/consult/session/session.integration.test.ts`.
