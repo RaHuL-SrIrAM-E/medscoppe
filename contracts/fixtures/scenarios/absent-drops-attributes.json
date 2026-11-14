@@ -1,0 +1,55 @@
+{
+ "description": "A denied symptom carries no invented attributes.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u18",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "No, I have not had a fever.",
+    "start_ms": 1000,
+    "end_ms": 2500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "FEVER",
+     "label": null,
+     "status": "ABSENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": {
+       "value": 2,
+       "unit": "DAYS",
+       "approximate": false,
+       "text": "two days"
+      },
+      "severity": "MILD",
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u18",
+       "role": "STATEMENT",
+       "quote": "I have not had a fever"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

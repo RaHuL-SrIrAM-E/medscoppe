@@ -1,0 +1,72 @@
+{
+ "description": "Patient first reported a cough; later says they have no cough. Both must stay, both UNRESOLVED.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u7",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "Actually, I don't have a cough.",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known1",
+    "kind": "SYMPTOM",
+    "symptom": "COUGH",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": {
+      "value": 5,
+      "unit": "DAYS",
+      "approximate": true,
+      "text": "about five days"
+     },
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "REINFORCE",
+    "target_id": "obs_known1",
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "ABSENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u7",
+       "role": "STATEMENT",
+       "quote": "I don't have a cough"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "extraction_id": "ext_001",
+ "schema_version": "1.0",
+ "proposals": [],
+ "held_for_review": [
+  {
+   "utterance_id": "u11",
+   "kind": "SYMPTOM",
+   "symptom": "CHEST_PAIN",
+   "label": null,
+   "status": "PRESENT",
+   "reason": "UNATTRIBUTED_SPEAKER",
+   "evidence": [
+    {
+     "utterance_id": "u11",
+     "role": "STATEMENT",
+     "quote": "I have had chest pain",
+     "char_start": 0,
+     "char_end": 21
+    }
+   ]
+  }
+ ],
+ "rejected": [],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": []
+}

@@ -1,0 +1,50 @@
+{
+ "description": "The model quotes words nobody said. Rejected; nothing enters the store.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u13",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "My throat is a bit sore.",
+    "start_ms": 1000,
+    "end_ms": 2500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "SORE_THROAT",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u13",
+       "role": "STATEMENT",
+       "quote": "I have had a severe sore throat for a week"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

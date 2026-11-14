@@ -1,0 +1,20 @@
+{
+ "extraction_id": "ext_001",
+ "schema_version": "1.0",
+ "proposals": [],
+ "held_for_review": [],
+ "rejected": [
+  {
+   "reason_code": "QUOTE_NOT_IN_UTTERANCE",
+   "utterance_id": "u13",
+   "symptom": "SORE_THROAT"
+  }
+ ],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": []
+}

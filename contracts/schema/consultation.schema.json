@@ -1,0 +1,1944 @@
+{
+ "schema_version": "1.0",
+ "extract_request": {
+  "$defs": {
+   "Attributes": {
+    "additionalProperties": false,
+    "description": "Everything here is null/empty unless the speaker actually said it. Null means NOT STATED.",
+    "properties": {
+     "onset": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Onset"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "duration": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Duration"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "severity": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Severity"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "character_over_time": {
+      "items": {
+       "$ref": "#/$defs/QualityPhase"
+      },
+      "maxItems": 4,
+      "title": "Character Over Time",
+      "type": "array"
+     },
+     "context": {
+      "items": {
+       "$ref": "#/$defs/Context"
+      },
+      "maxItems": 3,
+      "title": "Context",
+      "type": "array"
+     }
+    },
+    "title": "Attributes",
+    "type": "object"
+   },
+   "Character": {
+    "enum": [
+     "DRY",
+     "PRODUCTIVE"
+    ],
+    "title": "Character",
+    "type": "string"
+   },
+   "Context": {
+    "enum": [
+     "EXERTION",
+     "REST",
+     "NIGHT"
+    ],
+    "title": "Context",
+    "type": "string"
+   },
+   "Duration": {
+    "additionalProperties": false,
+    "properties": {
+     "value": {
+      "maximum": 365,
+      "minimum": 1,
+      "title": "Value",
+      "type": "integer"
+     },
+     "unit": {
+      "$ref": "#/$defs/DurationUnit"
+     },
+     "approximate": {
+      "title": "Approximate",
+      "type": "boolean"
+     },
+     "text": {
+      "description": "The words the speaker used, verbatim.",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value",
+     "unit",
+     "approximate",
+     "text"
+    ],
+    "title": "Duration",
+    "type": "object"
+   },
+   "DurationUnit": {
+    "enum": [
+     "HOURS",
+     "DAYS",
+     "WEEKS",
+     "MONTHS"
+    ],
+    "title": "DurationUnit",
+    "type": "string"
+   },
+   "ObservationKind": {
+    "enum": [
+     "SYMPTOM",
+     "PATIENT_STATED_CONDITION"
+    ],
+    "title": "ObservationKind",
+    "type": "string"
+   },
+   "ObservationRef": {
+    "additionalProperties": false,
+    "description": "What the client tells the server about observations it already holds (no quotes).",
+    "properties": {
+     "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Id",
+      "type": "string"
+     },
+     "kind": {
+      "$ref": "#/$defs/ObservationKind"
+     },
+     "symptom": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/SymptomCode"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "label": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Label"
+     },
+     "status": {
+      "$ref": "#/$defs/Status"
+     },
+     "source": {
+      "$ref": "#/$defs/Source"
+     },
+     "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "attributes": {
+      "$ref": "#/$defs/Attributes"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "symptom",
+     "status",
+     "source",
+     "revision",
+     "attributes"
+    ],
+    "title": "ObservationRef",
+    "type": "object"
+   },
+   "Onset": {
+    "enum": [
+     "SUDDEN",
+     "GRADUAL"
+    ],
+    "title": "Onset",
+    "type": "string"
+   },
+   "Phase": {
+    "enum": [
+     "INITIAL",
+     "CURRENT"
+    ],
+    "title": "Phase",
+    "type": "string"
+   },
+   "QualityPhase": {
+    "additionalProperties": false,
+    "properties": {
+     "phase": {
+      "$ref": "#/$defs/Phase"
+     },
+     "character": {
+      "$ref": "#/$defs/Character"
+     }
+    },
+    "required": [
+     "phase",
+     "character"
+    ],
+    "title": "QualityPhase",
+    "type": "object"
+   },
+   "Severity": {
+    "enum": [
+     "MILD",
+     "MODERATE",
+     "SEVERE"
+    ],
+    "title": "Severity",
+    "type": "string"
+   },
+   "Source": {
+    "enum": [
+     "PATIENT_REPORTED",
+     "DOCTOR_CONFIRMED",
+     "DOCTOR_OBSERVED",
+     "SYSTEM_DERIVED"
+    ],
+    "title": "Source",
+    "type": "string"
+   },
+   "Speaker": {
+    "enum": [
+     "DOCTOR",
+     "PATIENT",
+     "UNATTRIBUTED"
+    ],
+    "title": "Speaker",
+    "type": "string"
+   },
+   "SpeakerBasis": {
+    "description": "How the speaker label was obtained. There is deliberately no automatic-diarisation value.",
+    "enum": [
+     "SCRIPTED",
+     "MANUAL_SELECTION",
+     "UNVERIFIED"
+    ],
+    "title": "SpeakerBasis",
+    "type": "string"
+   },
+   "Status": {
+    "enum": [
+     "PRESENT",
+     "ABSENT",
+     "UNKNOWN",
+     "UNRESOLVED"
+    ],
+    "title": "Status",
+    "type": "string"
+   },
+   "SymptomCode": {
+    "enum": [
+     "COUGH",
+     "FEVER",
+     "DYSPNOEA",
+     "CHEST_PAIN",
+     "WHEEZE",
+     "HAEMOPTYSIS",
+     "SORE_THROAT",
+     "FATIGUE",
+     "NASAL_CONGESTION",
+     "HEADACHE",
+     "OTHER"
+    ],
+    "title": "SymptomCode",
+    "type": "string"
+   },
+   "Utterance": {
+    "additionalProperties": false,
+    "properties": {
+     "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Id",
+      "type": "string"
+     },
+     "speaker": {
+      "$ref": "#/$defs/Speaker"
+     },
+     "speaker_basis": {
+      "$ref": "#/$defs/SpeakerBasis"
+     },
+     "text": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     },
+     "start_ms": {
+      "anyOf": [
+       {
+        "minimum": 0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Start Ms"
+     },
+     "end_ms": {
+      "anyOf": [
+       {
+        "minimum": 0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "End Ms"
+     }
+    },
+    "required": [
+     "id",
+     "speaker",
+     "speaker_basis",
+     "text"
+    ],
+    "title": "Utterance",
+    "type": "object"
+   }
+  },
+  "additionalProperties": false,
+  "properties": {
+   "schema_version": {
+    "const": "1.0",
+    "title": "Schema Version",
+    "type": "string"
+   },
+   "consultation_id": {
+    "pattern": "^[A-Za-z0-9_-]{1,64}$",
+    "title": "Consultation Id",
+    "type": "string"
+   },
+   "data_classification": {
+    "description": "Must be \"SYNTHETIC\". Anything else is refused.",
+    "title": "Data Classification",
+    "type": "string"
+   },
+   "utterances": {
+    "items": {
+     "$ref": "#/$defs/Utterance"
+    },
+    "maxItems": 12,
+    "minItems": 1,
+    "title": "Utterances",
+    "type": "array"
+   },
+   "context_utterances": {
+    "items": {
+     "$ref": "#/$defs/Utterance"
+    },
+    "maxItems": 30,
+    "title": "Context Utterances",
+    "type": "array"
+   },
+   "known_observations": {
+    "items": {
+     "$ref": "#/$defs/ObservationRef"
+    },
+    "maxItems": 50,
+    "title": "Known Observations",
+    "type": "array"
+   }
+  },
+  "required": [
+   "schema_version",
+   "consultation_id",
+   "data_classification",
+   "utterances"
+  ],
+  "title": "ExtractRequest",
+  "type": "object"
+ },
+ "extract_response": {
+  "$defs": {
+   "Action": {
+    "enum": [
+     "ADD",
+     "REINFORCE",
+     "REFINE",
+     "CONTRADICT"
+    ],
+    "title": "Action",
+    "type": "string"
+   },
+   "Attributes": {
+    "additionalProperties": false,
+    "description": "Everything here is null/empty unless the speaker actually said it. Null means NOT STATED.",
+    "properties": {
+     "onset": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Onset"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "duration": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Duration"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "severity": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Severity"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "character_over_time": {
+      "items": {
+       "$ref": "#/$defs/QualityPhase"
+      },
+      "maxItems": 4,
+      "title": "Character Over Time",
+      "type": "array"
+     },
+     "context": {
+      "items": {
+       "$ref": "#/$defs/Context"
+      },
+      "maxItems": 3,
+      "title": "Context",
+      "type": "array"
+     }
+    },
+    "title": "Attributes",
+    "type": "object"
+   },
+   "Character": {
+    "enum": [
+     "DRY",
+     "PRODUCTIVE"
+    ],
+    "title": "Character",
+    "type": "string"
+   },
+   "Confidence": {
+    "enum": [
+     "LOW",
+     "MEDIUM",
+     "HIGH"
+    ],
+    "title": "Confidence",
+    "type": "string"
+   },
+   "Context": {
+    "enum": [
+     "EXERTION",
+     "REST",
+     "NIGHT"
+    ],
+    "title": "Context",
+    "type": "string"
+   },
+   "Duration": {
+    "additionalProperties": false,
+    "properties": {
+     "value": {
+      "maximum": 365,
+      "minimum": 1,
+      "title": "Value",
+      "type": "integer"
+     },
+     "unit": {
+      "$ref": "#/$defs/DurationUnit"
+     },
+     "approximate": {
+      "title": "Approximate",
+      "type": "boolean"
+     },
+     "text": {
+      "description": "The words the speaker used, verbatim.",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value",
+     "unit",
+     "approximate",
+     "text"
+    ],
+    "title": "Duration",
+    "type": "object"
+   },
+   "DurationUnit": {
+    "enum": [
+     "HOURS",
+     "DAYS",
+     "WEEKS",
+     "MONTHS"
+    ],
+    "title": "DurationUnit",
+    "type": "string"
+   },
+   "Evidence": {
+    "additionalProperties": false,
+    "properties": {
+     "utterance_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Utterance Id",
+      "type": "string"
+     },
+     "role": {
+      "$ref": "#/$defs/EvidenceRole"
+     },
+     "quote": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Quote",
+      "type": "string"
+     },
+     "char_start": {
+      "minimum": 0,
+      "title": "Char Start",
+      "type": "integer"
+     },
+     "char_end": {
+      "exclusiveMinimum": 0,
+      "title": "Char End",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "utterance_id",
+     "role",
+     "quote",
+     "char_start",
+     "char_end"
+    ],
+    "title": "Evidence",
+    "type": "object"
+   },
+   "EvidenceRole": {
+    "enum": [
+     "STATEMENT",
+     "QUESTION_CONTEXT"
+    ],
+    "title": "EvidenceRole",
+    "type": "string"
+   },
+   "ExtractorInfo": {
+    "additionalProperties": false,
+    "properties": {
+     "provider": {
+      "title": "Provider",
+      "type": "string"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     },
+     "is_replay": {
+      "title": "Is Replay",
+      "type": "boolean"
+     },
+     "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+     }
+    },
+    "required": [
+     "provider",
+     "model",
+     "is_replay"
+    ],
+    "title": "ExtractorInfo",
+    "type": "object"
+   },
+   "ExtractorReport": {
+    "additionalProperties": false,
+    "properties": {
+     "provider": {
+      "title": "Provider",
+      "type": "string"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     },
+     "is_replay": {
+      "title": "Is Replay",
+      "type": "boolean"
+     },
+     "latency_ms": {
+      "minimum": 0,
+      "title": "Latency Ms",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "provider",
+     "model",
+     "is_replay",
+     "latency_ms"
+    ],
+    "title": "ExtractorReport",
+    "type": "object"
+   },
+   "HeldObservation": {
+    "additionalProperties": false,
+    "description": "Extracted from a speaker that is not attributed. Not a claim until the doctor assigns a speaker.",
+    "properties": {
+     "utterance_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Utterance Id",
+      "type": "string"
+     },
+     "kind": {
+      "$ref": "#/$defs/ObservationKind"
+     },
+     "symptom": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/SymptomCode"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Label"
+     },
+     "status": {
+      "$ref": "#/$defs/Status"
+     },
+     "reason": {
+      "$ref": "#/$defs/HeldReason",
+      "default": "UNATTRIBUTED_SPEAKER"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/$defs/Evidence"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+     }
+    },
+    "required": [
+     "utterance_id",
+     "kind",
+     "symptom",
+     "status",
+     "evidence"
+    ],
+    "title": "HeldObservation",
+    "type": "object"
+   },
+   "HeldReason": {
+    "enum": [
+     "UNATTRIBUTED_SPEAKER"
+    ],
+    "title": "HeldReason",
+    "type": "string"
+   },
+   "Observation": {
+    "additionalProperties": false,
+    "properties": {
+     "id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Id",
+      "type": "string"
+     },
+     "kind": {
+      "$ref": "#/$defs/ObservationKind"
+     },
+     "symptom": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/SymptomCode"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "label": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Label"
+     },
+     "status": {
+      "$ref": "#/$defs/Status"
+     },
+     "source": {
+      "$ref": "#/$defs/Source"
+     },
+     "originated_as": {
+      "$ref": "#/$defs/Source",
+      "description": "Immutable across revisions: who first reported it."
+     },
+     "confidence": {
+      "$ref": "#/$defs/Confidence"
+     },
+     "attributes": {
+      "$ref": "#/$defs/Attributes"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/$defs/Evidence"
+      },
+      "maxItems": 12,
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+     },
+     "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+     },
+     "conflicts_with": {
+      "items": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
+       "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Conflicts With",
+      "type": "array"
+     },
+     "review": {
+      "$ref": "#/$defs/Review"
+     },
+     "extractor": {
+      "$ref": "#/$defs/ExtractorInfo"
+     },
+     "created_at": {
+      "title": "Created At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "symptom",
+     "status",
+     "source",
+     "originated_as",
+     "confidence",
+     "attributes",
+     "evidence",
+     "revision",
+     "extractor",
+     "created_at"
+    ],
+    "title": "Observation",
+    "type": "object"
+   },
+   "ObservationKind": {
+    "enum": [
+     "SYMPTOM",
+     "PATIENT_STATED_CONDITION"
+    ],
+    "title": "ObservationKind",
+    "type": "string"
+   },
+   "Onset": {
+    "enum": [
+     "SUDDEN",
+     "GRADUAL"
+    ],
+    "title": "Onset",
+    "type": "string"
+   },
+   "Phase": {
+    "enum": [
+     "INITIAL",
+     "CURRENT"
+    ],
+    "title": "Phase",
+    "type": "string"
+   },
+   "Proposal": {
+    "additionalProperties": false,
+    "properties": {
+     "action": {
+      "$ref": "#/$defs/Action"
+     },
+     "target_id": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z0-9_-]{1,64}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Target Id"
+     },
+     "observation": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Observation"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "ADD and CONTRADICT: the new observation."
+     },
+     "attributes_patch": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Attributes"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "REFINE: only fields that were null."
+     },
+     "added_evidence": {
+      "description": "REINFORCE and REFINE.",
+      "items": {
+       "$ref": "#/$defs/Evidence"
+      },
+      "maxItems": 4,
+      "title": "Added Evidence",
+      "type": "array"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "title": "Proposal",
+    "type": "object"
+   },
+   "QualityPhase": {
+    "additionalProperties": false,
+    "properties": {
+     "phase": {
+      "$ref": "#/$defs/Phase"
+     },
+     "character": {
+      "$ref": "#/$defs/Character"
+     }
+    },
+    "required": [
+     "phase",
+     "character"
+    ],
+    "title": "QualityPhase",
+    "type": "object"
+   },
+   "Rejection": {
+    "additionalProperties": false,
+    "properties": {
+     "reason_code": {
+      "$ref": "#/$defs/RejectionReason"
+     },
+     "utterance_id": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z0-9_-]{1,64}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Utterance Id"
+     },
+     "symptom": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/SymptomCode"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     }
+    },
+    "required": [
+     "reason_code"
+    ],
+    "title": "Rejection",
+    "type": "object"
+   },
+   "RejectionReason": {
+    "enum": [
+     "UNKNOWN_UTTERANCE",
+     "STATEMENT_NOT_IN_NEW_UTTERANCES",
+     "QUOTE_NOT_IN_UTTERANCE",
+     "MISSING_STATEMENT_EVIDENCE",
+     "SOURCE_NOT_ALLOWED",
+     "SPEAKER_MISMATCH",
+     "DOSE_OR_PRESCRIPTION_TEXT",
+     "DIAGNOSIS_NOT_SUPPORTED",
+     "INVALID_SYMPTOM_OR_LABEL",
+     "INVALID_STATUS",
+     "UNKNOWN_TARGET",
+     "NO_NEW_INFORMATION"
+    ],
+    "title": "RejectionReason",
+    "type": "string"
+   },
+   "Review": {
+    "additionalProperties": false,
+    "properties": {
+     "state": {
+      "$ref": "#/$defs/ReviewState",
+      "default": "UNREVIEWED"
+     },
+     "at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "At"
+     },
+     "corrected_fields": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Corrected Fields",
+      "type": "array"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Note"
+     }
+    },
+    "title": "Review",
+    "type": "object"
+   },
+   "ReviewState": {
+    "enum": [
+     "UNREVIEWED",
+     "CONFIRMED",
+     "CORRECTED",
+     "REJECTED"
+    ],
+    "title": "ReviewState",
+    "type": "string"
+   },
+   "Severity": {
+    "enum": [
+     "MILD",
+     "MODERATE",
+     "SEVERE"
+    ],
+    "title": "Severity",
+    "type": "string"
+   },
+   "Source": {
+    "enum": [
+     "PATIENT_REPORTED",
+     "DOCTOR_CONFIRMED",
+     "DOCTOR_OBSERVED",
+     "SYSTEM_DERIVED"
+    ],
+    "title": "Source",
+    "type": "string"
+   },
+   "Status": {
+    "enum": [
+     "PRESENT",
+     "ABSENT",
+     "UNKNOWN",
+     "UNRESOLVED"
+    ],
+    "title": "Status",
+    "type": "string"
+   },
+   "SymptomCode": {
+    "enum": [
+     "COUGH",
+     "FEVER",
+     "DYSPNOEA",
+     "CHEST_PAIN",
+     "WHEEZE",
+     "HAEMOPTYSIS",
+     "SORE_THROAT",
+     "FATIGUE",
+     "NASAL_CONGESTION",
+     "HEADACHE",
+     "OTHER"
+    ],
+    "title": "SymptomCode",
+    "type": "string"
+   }
+  },
+  "additionalProperties": false,
+  "properties": {
+   "extraction_id": {
+    "pattern": "^[A-Za-z0-9_-]{1,64}$",
+    "title": "Extraction Id",
+    "type": "string"
+   },
+   "schema_version": {
+    "const": "1.0",
+    "default": "1.0",
+    "title": "Schema Version",
+    "type": "string"
+   },
+   "proposals": {
+    "items": {
+     "$ref": "#/$defs/Proposal"
+    },
+    "title": "Proposals",
+    "type": "array"
+   },
+   "held_for_review": {
+    "items": {
+     "$ref": "#/$defs/HeldObservation"
+    },
+    "title": "Held For Review",
+    "type": "array"
+   },
+   "rejected": {
+    "items": {
+     "$ref": "#/$defs/Rejection"
+    },
+    "title": "Rejected",
+    "type": "array"
+   },
+   "extractor": {
+    "$ref": "#/$defs/ExtractorReport"
+   },
+   "warnings": {
+    "items": {
+     "type": "string"
+    },
+    "title": "Warnings",
+    "type": "array"
+   }
+  },
+  "required": [
+   "extraction_id",
+   "proposals",
+   "held_for_review",
+   "rejected",
+   "extractor",
+   "warnings"
+  ],
+  "title": "ExtractResponse",
+  "type": "object"
+ },
+ "model_output": {
+  "$defs": {
+   "Action": {
+    "enum": [
+     "ADD",
+     "REINFORCE",
+     "REFINE",
+     "CONTRADICT"
+    ],
+    "title": "Action",
+    "type": "string"
+   },
+   "Attributes": {
+    "additionalProperties": false,
+    "description": "Everything here is null/empty unless the speaker actually said it. Null means NOT STATED.",
+    "properties": {
+     "onset": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Onset"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "duration": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Duration"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "severity": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Severity"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "character_over_time": {
+      "items": {
+       "$ref": "#/$defs/QualityPhase"
+      },
+      "maxItems": 4,
+      "title": "Character Over Time",
+      "type": "array"
+     },
+     "context": {
+      "items": {
+       "$ref": "#/$defs/Context"
+      },
+      "maxItems": 3,
+      "title": "Context",
+      "type": "array"
+     }
+    },
+    "title": "Attributes",
+    "type": "object"
+   },
+   "Character": {
+    "enum": [
+     "DRY",
+     "PRODUCTIVE"
+    ],
+    "title": "Character",
+    "type": "string"
+   },
+   "Confidence": {
+    "enum": [
+     "LOW",
+     "MEDIUM",
+     "HIGH"
+    ],
+    "title": "Confidence",
+    "type": "string"
+   },
+   "Context": {
+    "enum": [
+     "EXERTION",
+     "REST",
+     "NIGHT"
+    ],
+    "title": "Context",
+    "type": "string"
+   },
+   "Duration": {
+    "additionalProperties": false,
+    "properties": {
+     "value": {
+      "maximum": 365,
+      "minimum": 1,
+      "title": "Value",
+      "type": "integer"
+     },
+     "unit": {
+      "$ref": "#/$defs/DurationUnit"
+     },
+     "approximate": {
+      "title": "Approximate",
+      "type": "boolean"
+     },
+     "text": {
+      "description": "The words the speaker used, verbatim.",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value",
+     "unit",
+     "approximate",
+     "text"
+    ],
+    "title": "Duration",
+    "type": "object"
+   },
+   "DurationUnit": {
+    "enum": [
+     "HOURS",
+     "DAYS",
+     "WEEKS",
+     "MONTHS"
+    ],
+    "title": "DurationUnit",
+    "type": "string"
+   },
+   "EvidenceRole": {
+    "enum": [
+     "STATEMENT",
+     "QUESTION_CONTEXT"
+    ],
+    "title": "EvidenceRole",
+    "type": "string"
+   },
+   "ModelEvidence": {
+    "additionalProperties": false,
+    "properties": {
+     "utterance_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Utterance Id",
+      "type": "string"
+     },
+     "role": {
+      "$ref": "#/$defs/EvidenceRole"
+     },
+     "quote": {
+      "description": "Copied exactly from the utterance text.",
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Quote",
+      "type": "string"
+     }
+    },
+    "required": [
+     "utterance_id",
+     "role",
+     "quote"
+    ],
+    "title": "ModelEvidence",
+    "type": "object"
+   },
+   "ModelObservation": {
+    "additionalProperties": false,
+    "properties": {
+     "kind": {
+      "$ref": "#/$defs/ObservationKind"
+     },
+     "symptom": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/SymptomCode"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Required for SYMPTOM; null for PATIENT_STATED_CONDITION."
+     },
+     "label": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "Only for OTHER symptoms and stated conditions.",
+      "title": "Label"
+     },
+     "status": {
+      "$ref": "#/$defs/Status"
+     },
+     "source": {
+      "$ref": "#/$defs/Source"
+     },
+     "confidence": {
+      "$ref": "#/$defs/Confidence"
+     },
+     "attributes": {
+      "$ref": "#/$defs/Attributes"
+     },
+     "evidence": {
+      "items": {
+       "$ref": "#/$defs/ModelEvidence"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+     }
+    },
+    "required": [
+     "kind",
+     "status",
+     "source",
+     "confidence",
+     "attributes",
+     "evidence"
+    ],
+    "title": "ModelObservation",
+    "type": "object"
+   },
+   "ModelProposal": {
+    "additionalProperties": false,
+    "properties": {
+     "action_hint": {
+      "$ref": "#/$defs/Action",
+      "description": "A hint only. The application decides the real action."
+     },
+     "target_id": {
+      "anyOf": [
+       {
+        "pattern": "^[A-Za-z0-9_-]{1,64}$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Target Id"
+     },
+     "observation": {
+      "$ref": "#/$defs/ModelObservation"
+     }
+    },
+    "required": [
+     "action_hint",
+     "observation"
+    ],
+    "title": "ModelProposal",
+    "type": "object"
+   },
+   "ObservationKind": {
+    "enum": [
+     "SYMPTOM",
+     "PATIENT_STATED_CONDITION"
+    ],
+    "title": "ObservationKind",
+    "type": "string"
+   },
+   "Onset": {
+    "enum": [
+     "SUDDEN",
+     "GRADUAL"
+    ],
+    "title": "Onset",
+    "type": "string"
+   },
+   "Phase": {
+    "enum": [
+     "INITIAL",
+     "CURRENT"
+    ],
+    "title": "Phase",
+    "type": "string"
+   },
+   "QualityPhase": {
+    "additionalProperties": false,
+    "properties": {
+     "phase": {
+      "$ref": "#/$defs/Phase"
+     },
+     "character": {
+      "$ref": "#/$defs/Character"
+     }
+    },
+    "required": [
+     "phase",
+     "character"
+    ],
+    "title": "QualityPhase",
+    "type": "object"
+   },
+   "Severity": {
+    "enum": [
+     "MILD",
+     "MODERATE",
+     "SEVERE"
+    ],
+    "title": "Severity",
+    "type": "string"
+   },
+   "Source": {
+    "enum": [
+     "PATIENT_REPORTED",
+     "DOCTOR_CONFIRMED",
+     "DOCTOR_OBSERVED",
+     "SYSTEM_DERIVED"
+    ],
+    "title": "Source",
+    "type": "string"
+   },
+   "Status": {
+    "enum": [
+     "PRESENT",
+     "ABSENT",
+     "UNKNOWN",
+     "UNRESOLVED"
+    ],
+    "title": "Status",
+    "type": "string"
+   },
+   "SymptomCode": {
+    "enum": [
+     "COUGH",
+     "FEVER",
+     "DYSPNOEA",
+     "CHEST_PAIN",
+     "WHEEZE",
+     "HAEMOPTYSIS",
+     "SORE_THROAT",
+     "FATIGUE",
+     "NASAL_CONGESTION",
+     "HEADACHE",
+     "OTHER"
+    ],
+    "title": "SymptomCode",
+    "type": "string"
+   }
+  },
+  "additionalProperties": false,
+  "properties": {
+   "proposals": {
+    "items": {
+     "$ref": "#/$defs/ModelProposal"
+    },
+    "maxItems": 12,
+    "title": "Proposals",
+    "type": "array"
+   }
+  },
+  "required": [
+   "proposals"
+  ],
+  "title": "ModelOutput",
+  "type": "object"
+ },
+ "observation": {
+  "$defs": {
+   "Attributes": {
+    "additionalProperties": false,
+    "description": "Everything here is null/empty unless the speaker actually said it. Null means NOT STATED.",
+    "properties": {
+     "onset": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Onset"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "duration": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Duration"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "severity": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Severity"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null
+     },
+     "character_over_time": {
+      "items": {
+       "$ref": "#/$defs/QualityPhase"
+      },
+      "maxItems": 4,
+      "title": "Character Over Time",
+      "type": "array"
+     },
+     "context": {
+      "items": {
+       "$ref": "#/$defs/Context"
+      },
+      "maxItems": 3,
+      "title": "Context",
+      "type": "array"
+     }
+    },
+    "title": "Attributes",
+    "type": "object"
+   },
+   "Character": {
+    "enum": [
+     "DRY",
+     "PRODUCTIVE"
+    ],
+    "title": "Character",
+    "type": "string"
+   },
+   "Confidence": {
+    "enum": [
+     "LOW",
+     "MEDIUM",
+     "HIGH"
+    ],
+    "title": "Confidence",
+    "type": "string"
+   },
+   "Context": {
+    "enum": [
+     "EXERTION",
+     "REST",
+     "NIGHT"
+    ],
+    "title": "Context",
+    "type": "string"
+   },
+   "Duration": {
+    "additionalProperties": false,
+    "properties": {
+     "value": {
+      "maximum": 365,
+      "minimum": 1,
+      "title": "Value",
+      "type": "integer"
+     },
+     "unit": {
+      "$ref": "#/$defs/DurationUnit"
+     },
+     "approximate": {
+      "title": "Approximate",
+      "type": "boolean"
+     },
+     "text": {
+      "description": "The words the speaker used, verbatim.",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value",
+     "unit",
+     "approximate",
+     "text"
+    ],
+    "title": "Duration",
+    "type": "object"
+   },
+   "DurationUnit": {
+    "enum": [
+     "HOURS",
+     "DAYS",
+     "WEEKS",
+     "MONTHS"
+    ],
+    "title": "DurationUnit",
+    "type": "string"
+   },
+   "Evidence": {
+    "additionalProperties": false,
+    "properties": {
+     "utterance_id": {
+      "pattern": "^[A-Za-z0-9_-]{1,64}$",
+      "title": "Utterance Id",
+      "type": "string"
+     },
+     "role": {
+      "$ref": "#/$defs/EvidenceRole"
+     },
+     "quote": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Quote",
+      "type": "string"
+     },
+     "char_start": {
+      "minimum": 0,
+      "title": "Char Start",
+      "type": "integer"
+     },
+     "char_end": {
+      "exclusiveMinimum": 0,
+      "title": "Char End",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "utterance_id",
+     "role",
+     "quote",
+     "char_start",
+     "char_end"
+    ],
+    "title": "Evidence",
+    "type": "object"
+   },
+   "EvidenceRole": {
+    "enum": [
+     "STATEMENT",
+     "QUESTION_CONTEXT"
+    ],
+    "title": "EvidenceRole",
+    "type": "string"
+   },
+   "ExtractorInfo": {
+    "additionalProperties": false,
+    "properties": {
+     "provider": {
+      "title": "Provider",
+      "type": "string"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     },
+     "is_replay": {
+      "title": "Is Replay",
+      "type": "boolean"
+     },
+     "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+     }
+    },
+    "required": [
+     "provider",
+     "model",
+     "is_replay"
+    ],
+    "title": "ExtractorInfo",
+    "type": "object"
+   },
+   "ObservationKind": {
+    "enum": [
+     "SYMPTOM",
+     "PATIENT_STATED_CONDITION"
+    ],
+    "title": "ObservationKind",
+    "type": "string"
+   },
+   "Onset": {
+    "enum": [
+     "SUDDEN",
+     "GRADUAL"
+    ],
+    "title": "Onset",
+    "type": "string"
+   },
+   "Phase": {
+    "enum": [
+     "INITIAL",
+     "CURRENT"
+    ],
+    "title": "Phase",
+    "type": "string"
+   },
+   "QualityPhase": {
+    "additionalProperties": false,
+    "properties": {
+     "phase": {
+      "$ref": "#/$defs/Phase"
+     },
+     "character": {
+      "$ref": "#/$defs/Character"
+     }
+    },
+    "required": [
+     "phase",
+     "character"
+    ],
+    "title": "QualityPhase",
+    "type": "object"
+   },
+   "Review": {
+    "additionalProperties": false,
+    "properties": {
+     "state": {
+      "$ref": "#/$defs/ReviewState",
+      "default": "UNREVIEWED"
+     },
+     "at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "At"
+     },
+     "corrected_fields": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 8,
+      "title": "Corrected Fields",
+      "type": "array"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Note"
+     }
+    },
+    "title": "Review",
+    "type": "object"
+   },
+   "ReviewState": {
+    "enum": [
+     "UNREVIEWED",
+     "CONFIRMED",
+     "CORRECTED",
+     "REJECTED"
+    ],
+    "title": "ReviewState",
+    "type": "string"
+   },
+   "Severity": {
+    "enum": [
+     "MILD",
+     "MODERATE",
+     "SEVERE"
+    ],
+    "title": "Severity",
+    "type": "string"
+   },
+   "Source": {
+    "enum": [
+     "PATIENT_REPORTED",
+     "DOCTOR_CONFIRMED",
+     "DOCTOR_OBSERVED",
+     "SYSTEM_DERIVED"
+    ],
+    "title": "Source",
+    "type": "string"
+   },
+   "Status": {
+    "enum": [
+     "PRESENT",
+     "ABSENT",
+     "UNKNOWN",
+     "UNRESOLVED"
+    ],
+    "title": "Status",
+    "type": "string"
+   },
+   "SymptomCode": {
+    "enum": [
+     "COUGH",
+     "FEVER",
+     "DYSPNOEA",
+     "CHEST_PAIN",
+     "WHEEZE",
+     "HAEMOPTYSIS",
+     "SORE_THROAT",
+     "FATIGUE",
+     "NASAL_CONGESTION",
+     "HEADACHE",
+     "OTHER"
+    ],
+    "title": "SymptomCode",
+    "type": "string"
+   }
+  },
+  "additionalProperties": false,
+  "properties": {
+   "id": {
+    "pattern": "^[A-Za-z0-9_-]{1,64}$",
+    "title": "Id",
+    "type": "string"
+   },
+   "kind": {
+    "$ref": "#/$defs/ObservationKind"
+   },
+   "symptom": {
+    "anyOf": [
+     {
+      "$ref": "#/$defs/SymptomCode"
+     },
+     {
+      "type": "null"
+     }
+    ]
+   },
+   "label": {
+    "anyOf": [
+     {
+      "maxLength": 40,
+      "type": "string"
+     },
+     {
+      "type": "null"
+     }
+    ],
+    "default": null,
+    "title": "Label"
+   },
+   "status": {
+    "$ref": "#/$defs/Status"
+   },
+   "source": {
+    "$ref": "#/$defs/Source"
+   },
+   "originated_as": {
+    "$ref": "#/$defs/Source",
+    "description": "Immutable across revisions: who first reported it."
+   },
+   "confidence": {
+    "$ref": "#/$defs/Confidence"
+   },
+   "attributes": {
+    "$ref": "#/$defs/Attributes"
+   },
+   "evidence": {
+    "items": {
+     "$ref": "#/$defs/Evidence"
+    },
+    "maxItems": 12,
+    "minItems": 1,
+    "title": "Evidence",
+    "type": "array"
+   },
+   "revision": {
+    "minimum": 1,
+    "title": "Revision",
+    "type": "integer"
+   },
+   "conflicts_with": {
+    "items": {
+     "pattern": "^[A-Za-z0-9_-]{1,64}$",
+     "type": "string"
+    },
+    "maxItems": 8,
+    "title": "Conflicts With",
+    "type": "array"
+   },
+   "review": {
+    "$ref": "#/$defs/Review"
+   },
+   "extractor": {
+    "$ref": "#/$defs/ExtractorInfo"
+   },
+   "created_at": {
+    "title": "Created At",
+    "type": "string"
+   }
+  },
+  "required": [
+   "id",
+   "kind",
+   "symptom",
+   "status",
+   "source",
+   "originated_as",
+   "confidence",
+   "attributes",
+   "evidence",
+   "revision",
+   "extractor",
+   "created_at"
+  ],
+  "title": "Observation",
+  "type": "object"
+ }
+}

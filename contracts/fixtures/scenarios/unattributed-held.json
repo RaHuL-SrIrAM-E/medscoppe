@@ -1,0 +1,50 @@
+{
+ "description": "The speaker is unverified, so the claim cannot become patient-reported. It is held for speaker review.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u11",
+    "speaker": "UNATTRIBUTED",
+    "speaker_basis": "UNVERIFIED",
+    "text": "I have had chest pain since yesterday.",
+    "start_ms": 1000,
+    "end_ms": 3500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "CHEST_PAIN",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u11",
+       "role": "STATEMENT",
+       "quote": "I have had chest pain"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "description": "The model's number disagrees with the speaker's own words; the application uses the words.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u19",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "I have had a cough for three days.",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": {
+       "value": 9,
+       "unit": "DAYS",
+       "approximate": false,
+       "text": "three days"
+      },
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u19",
+       "role": "STATEMENT",
+       "quote": "a cough for three days"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

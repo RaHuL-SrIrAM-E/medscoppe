@@ -1,0 +1,61 @@
+{
+ "provenance": "SYNTHETIC. Written for MEDSCOPE demonstrations. Not a real consultation and not a real patient.",
+ "consultation_id": "demo-resp-001",
+ "batches": [
+  {
+   "label": "Patient describes cough and fever",
+   "utterances": [
+    {
+     "id": "u1",
+     "speaker": "PATIENT",
+     "speaker_basis": "SCRIPTED",
+     "text": "I've been coughing for about five days. Initially it was dry, but now I'm coughing up some mucus. I've also had a fever for the last two days.",
+     "start_ms": 1200,
+     "end_ms": 13800
+    }
+   ]
+  },
+  {
+   "label": "Doctor asks about breathing",
+   "utterances": [
+    {
+     "id": "u2",
+     "speaker": "DOCTOR",
+     "speaker_basis": "SCRIPTED",
+     "text": "Are you experiencing any difficulty breathing?",
+     "start_ms": 15200,
+     "end_ms": 18400
+    },
+    {
+     "id": "u3",
+     "speaker": "PATIENT",
+     "speaker_basis": "SCRIPTED",
+     "text": "Yes, especially when walking upstairs.",
+     "start_ms": 19200,
+     "end_ms": 22300
+    }
+   ]
+  },
+  {
+   "label": "Doctor asks about chest pain",
+   "utterances": [
+    {
+     "id": "u4",
+     "speaker": "DOCTOR",
+     "speaker_basis": "SCRIPTED",
+     "text": "Do you have any chest pain?",
+     "start_ms": 24100,
+     "end_ms": 26200
+    },
+    {
+     "id": "u5",
+     "speaker": "PATIENT",
+     "speaker_basis": "SCRIPTED",
+     "text": "No, I don't.",
+     "start_ms": 27100,
+     "end_ms": 28300
+    }
+   ]
+  }
+ ]
+}

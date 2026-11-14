@@ -1,0 +1,79 @@
+{
+ "description": "New information fills an attribute that was not stated before. Existing fields are untouched.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u9",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "The cough is worse at night, around four days now.",
+    "start_ms": 1000,
+    "end_ms": 4000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known1",
+    "kind": "SYMPTOM",
+    "symptom": "COUGH",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": {
+       "value": 4,
+       "unit": "DAYS",
+       "approximate": true,
+       "text": "around four days"
+      },
+      "severity": null,
+      "character_over_time": [],
+      "context": [
+       "NIGHT"
+      ]
+     },
+     "evidence": [
+      {
+       "utterance_id": "u9",
+       "role": "STATEMENT",
+       "quote": "worse at night"
+      },
+      {
+       "utterance_id": "u9",
+       "role": "STATEMENT",
+       "quote": "around four days"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

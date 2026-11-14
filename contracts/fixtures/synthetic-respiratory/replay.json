@@ -1,0 +1,192 @@
+{
+ "provenance": "HAND-AUTHORED FIXTURE. These outputs were written by a person to resemble model output, because no Gemini credentials were available. They are NOT recordings of a real model call. Replace them with real recordings using backend/scripts/record_replay.py once GEMINI_API_KEY and GEMINI_MODEL are set.",
+ "entries": [
+  {
+   "label": "Patient describes cough and fever",
+   "match": [
+    {
+     "speaker": "PATIENT",
+     "text": "I've been coughing for about five days. Initially it was dry, but now I'm coughing up some mucus. I've also had a fever for the last two days."
+    }
+   ],
+   "model_output": {
+    "proposals": [
+     {
+      "action_hint": "ADD",
+      "target_id": null,
+      "observation": {
+       "kind": "SYMPTOM",
+       "symptom": "COUGH",
+       "label": null,
+       "status": "PRESENT",
+       "source": "PATIENT_REPORTED",
+       "confidence": "HIGH",
+       "attributes": {
+        "onset": null,
+        "duration": {
+         "value": 5,
+         "unit": "DAYS",
+         "approximate": true,
+         "text": "about five days"
+        },
+        "severity": null,
+        "character_over_time": [
+         {
+          "phase": "INITIAL",
+          "character": "DRY"
+         },
+         {
+          "phase": "CURRENT",
+          "character": "PRODUCTIVE"
+         }
+        ],
+        "context": []
+       },
+       "evidence": [
+        {
+         "utterance_id": "u1",
+         "role": "STATEMENT",
+         "quote": "I've been coughing for about five days"
+        },
+        {
+         "utterance_id": "u1",
+         "role": "STATEMENT",
+         "quote": "Initially it was dry, but now I'm coughing up some mucus"
+        }
+       ]
+      }
+     },
+     {
+      "action_hint": "ADD",
+      "target_id": null,
+      "observation": {
+       "kind": "SYMPTOM",
+       "symptom": "FEVER",
+       "label": null,
+       "status": "PRESENT",
+       "source": "PATIENT_REPORTED",
+       "confidence": "HIGH",
+       "attributes": {
+        "onset": null,
+        "duration": {
+         "value": 2,
+         "unit": "DAYS",
+         "approximate": true,
+         "text": "the last two days"
+        },
+        "severity": null,
+        "character_over_time": [],
+        "context": []
+       },
+       "evidence": [
+        {
+         "utterance_id": "u1",
+         "role": "STATEMENT",
+         "quote": "I've also had a fever for the last two days"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "Doctor asks about breathing",
+   "match": [
+    {
+     "speaker": "DOCTOR",
+     "text": "Are you experiencing any difficulty breathing?"
+    },
+    {
+     "speaker": "PATIENT",
+     "text": "Yes, especially when walking upstairs."
+    }
+   ],
+   "model_output": {
+    "proposals": [
+     {
+      "action_hint": "ADD",
+      "target_id": null,
+      "observation": {
+       "kind": "SYMPTOM",
+       "symptom": "DYSPNOEA",
+       "label": null,
+       "status": "PRESENT",
+       "source": "PATIENT_REPORTED",
+       "confidence": "HIGH",
+       "attributes": {
+        "onset": null,
+        "duration": null,
+        "severity": null,
+        "character_over_time": [],
+        "context": [
+         "EXERTION"
+        ]
+       },
+       "evidence": [
+        {
+         "utterance_id": "u3",
+         "role": "STATEMENT",
+         "quote": "Yes, especially when walking upstairs"
+        },
+        {
+         "utterance_id": "u2",
+         "role": "QUESTION_CONTEXT",
+         "quote": "difficulty breathing"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "Doctor asks about chest pain",
+   "match": [
+    {
+     "speaker": "DOCTOR",
+     "text": "Do you have any chest pain?"
+    },
+    {
+     "speaker": "PATIENT",
+     "text": "No, I don't."
+    }
+   ],
+   "model_output": {
+    "proposals": [
+     {
+      "action_hint": "ADD",
+      "target_id": null,
+      "observation": {
+       "kind": "SYMPTOM",
+       "symptom": "CHEST_PAIN",
+       "label": null,
+       "status": "ABSENT",
+       "source": "PATIENT_REPORTED",
+       "confidence": "HIGH",
+       "attributes": {
+        "onset": null,
+        "duration": null,
+        "severity": null,
+        "character_over_time": [],
+        "context": []
+       },
+       "evidence": [
+        {
+         "utterance_id": "u5",
+         "role": "STATEMENT",
+         "quote": "No, I don't"
+        },
+        {
+         "utterance_id": "u4",
+         "role": "QUESTION_CONTEXT",
+         "quote": "any chest pain"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

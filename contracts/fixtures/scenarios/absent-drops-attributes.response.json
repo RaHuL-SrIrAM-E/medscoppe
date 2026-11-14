@@ -1,0 +1,64 @@
+{
+ "extraction_id": "ext_001",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "ADD",
+   "target_id": null,
+   "observation": {
+    "id": "obs_001",
+    "kind": "SYMPTOM",
+    "symptom": "FEVER",
+    "label": null,
+    "status": "ABSENT",
+    "source": "PATIENT_REPORTED",
+    "originated_as": "PATIENT_REPORTED",
+    "confidence": "HIGH",
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    },
+    "evidence": [
+     {
+      "utterance_id": "u18",
+      "role": "STATEMENT",
+      "quote": "I have not had a fever",
+      "char_start": 4,
+      "char_end": 26
+     }
+    ],
+    "revision": 1,
+    "conflicts_with": [],
+    "review": {
+     "state": "UNREVIEWED",
+     "at": null,
+     "corrected_fields": [],
+     "note": null
+    },
+    "extractor": {
+     "provider": "fixture",
+     "model": "static",
+     "is_replay": false,
+     "schema_version": "1.0"
+    },
+    "created_at": "2026-11-15T09:00:00Z"
+   },
+   "attributes_patch": null,
+   "added_evidence": []
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": [
+  "FEVER:ATTRIBUTES_DROPPED_FOR_NON_PRESENT"
+ ]
+}

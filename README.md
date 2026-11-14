@@ -27,6 +27,7 @@ cd app && npm run typecheck && npm test && npm run build
 cd app && npm run verify:hands      # needs `dev up`; hands-only emulator checks (controllers disconnected)
 cd app && npm run verify:anatomy    # needs `dev up`; select -> card -> isolate -> layers -> reset, all by hand ray
 cd backend && .venv/bin/python -m pytest
+cd backend && .venv/bin/python scripts/demo_extract.py   # synthetic respiratory consultation through the extraction API
 cd tools/anatomy-pipeline && .venv/bin/python -m pytest
 ```
 
@@ -42,3 +43,14 @@ required attribution: `docs/asset-licenses.md`.
 **Limitations (as of Phase 1):** hand interaction is validated only in the IWER emulator, not on a
 physical Meta Quest. Lung lobe shapes are generated approximations. Structure text is unreviewed
 educational content. Muscular and nervous systems are not loaded.
+
+## Consultation extraction (Phase 2, in progress)
+
+`docs/phase2-architecture.md` is the approved design. Implemented so far: the shared contracts (`contracts/`), the
+backend extraction service with a Gemini adapter (`backend/app/consult/`), and the frontend Zod contracts and
+append-only consultation context store (`app/src/consult/`). Not yet built: the session machine, the spatial UI,
+microphone, speech output and voice commands.
+
+Gemini is configured only through the backend environment (`GEMINI_API_KEY`, `GEMINI_MODEL`; see `backend/.env.example`),
+never in the frontend. Without credentials the API uses a clearly labelled, hand-authored recorded-replay fixture and every
+response says so. Synthetic data only: the API refuses anything else.

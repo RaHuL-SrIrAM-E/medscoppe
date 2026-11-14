@@ -1,0 +1,77 @@
+{
+ "description": "Same symptom, same status, but the stated duration disagrees with the one on record.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u8",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "It has been about three weeks now.",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known1",
+    "kind": "SYMPTOM",
+    "symptom": "COUGH",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": {
+      "value": 5,
+      "unit": "DAYS",
+      "approximate": true,
+      "text": "about five days"
+     },
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "REFINE",
+    "target_id": "obs_known1",
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": {
+       "value": 3,
+       "unit": "WEEKS",
+       "approximate": true,
+       "text": "about three weeks"
+      },
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u8",
+       "role": "STATEMENT",
+       "quote": "about three weeks"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

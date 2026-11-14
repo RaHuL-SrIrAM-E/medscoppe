@@ -1,0 +1,50 @@
+{
+ "description": "The patient names a disease. It is recorded as an unverified belief (UNRESOLVED), never a diagnosis.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u12",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "I think I have pneumonia.",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "PATIENT_STATED_CONDITION",
+     "symptom": null,
+     "label": "pneumonia",
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "MEDIUM",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u12",
+       "role": "STATEMENT",
+       "quote": "I think I have pneumonia"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

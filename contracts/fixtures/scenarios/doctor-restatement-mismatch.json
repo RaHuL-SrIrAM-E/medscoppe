@@ -1,0 +1,50 @@
+{
+ "description": "A doctor restating what the patient said is not an observation. Claimed as patient-reported, it is a speaker mismatch.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u16",
+    "speaker": "DOCTOR",
+    "speaker_basis": "SCRIPTED",
+    "text": "So you have had a cough for five days?",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u16",
+       "role": "STATEMENT",
+       "quote": "you have had a cough for five days"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

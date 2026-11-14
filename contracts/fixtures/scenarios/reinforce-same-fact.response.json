@@ -1,0 +1,30 @@
+{
+ "extraction_id": "ext_001",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "REINFORCE",
+   "target_id": "obs_known1",
+   "observation": null,
+   "attributes_patch": null,
+   "added_evidence": [
+    {
+     "utterance_id": "u10",
+     "role": "STATEMENT",
+     "quote": "I do have a cough",
+     "char_start": 5,
+     "char_end": 22
+    }
+   ]
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": []
+}

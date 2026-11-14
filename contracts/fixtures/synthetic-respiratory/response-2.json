@@ -1,0 +1,73 @@
+{
+ "extraction_id": "ext_002",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "ADD",
+   "target_id": null,
+   "observation": {
+    "id": "obs_003",
+    "kind": "SYMPTOM",
+    "symptom": "DYSPNOEA",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "originated_as": "PATIENT_REPORTED",
+    "confidence": "HIGH",
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": [
+      "EXERTION"
+     ]
+    },
+    "evidence": [
+     {
+      "utterance_id": "u3",
+      "role": "STATEMENT",
+      "quote": "Yes, especially when walking upstairs",
+      "char_start": 0,
+      "char_end": 37
+     },
+     {
+      "utterance_id": "u2",
+      "role": "QUESTION_CONTEXT",
+      "quote": "difficulty breathing",
+      "char_start": 25,
+      "char_end": 45
+     }
+    ],
+    "revision": 1,
+    "conflicts_with": [],
+    "review": {
+     "state": "UNREVIEWED",
+     "at": null,
+     "corrected_fields": [],
+     "note": null
+    },
+    "extractor": {
+     "provider": "replay",
+     "model": "replay-fixture",
+     "is_replay": true,
+     "schema_version": "1.0"
+    },
+    "created_at": "2026-11-15T09:00:00Z"
+   },
+   "attributes_patch": null,
+   "added_evidence": []
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "replay",
+  "model": "replay-fixture",
+  "is_replay": true,
+  "latency_ms": 0
+ },
+ "warnings": [
+  "REPLAY_FIXTURE: output is a recorded fixture, not a live model call"
+ ]
+}

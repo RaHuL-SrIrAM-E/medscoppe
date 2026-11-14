@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_settings
+from .config import Settings, get_settings
+from .consult.routes import install_error_handlers, router as consultation_router
+from .consult.schema import SCHEMA_VERSION
 
 settings = get_settings()
 
@@ -14,7 +16,18 @@ app.add_middleware(
 )
 
 
+app.include_router(consultation_router)
+install_error_handlers(app)
+
+
 @app.get("/health")
-def health() -> dict[str, object]:
+def health(settings: Settings = Depends(get_settings)) -> dict[str, object]:
     """Liveness plus capability flags. Never echoes secrets."""
-    return {"status": "ok", "gemini_configured": settings.gemini_configured}
+    provider = settings.resolved_extraction_provider
+    return {
+        "status": "ok",
+        "gemini_configured": settings.gemini_configured,
+        "extraction_provider": provider,
+        "extraction_is_replay": provider == "replay",
+        "schema_version": SCHEMA_VERSION,
+    }

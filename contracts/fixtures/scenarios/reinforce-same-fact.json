@@ -1,0 +1,67 @@
+{
+ "description": "The same fact is stated again: evidence is added, nothing changes.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u10",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "Yes, I do have a cough.",
+    "start_ms": 1000,
+    "end_ms": 2500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known1",
+    "kind": "SYMPTOM",
+    "symptom": "COUGH",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "COUGH",
+     "label": null,
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u10",
+       "role": "STATEMENT",
+       "quote": "I do have a cough"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

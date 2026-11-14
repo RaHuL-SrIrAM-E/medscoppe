@@ -1,0 +1,137 @@
+{
+ "extraction_id": "ext_001",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "ADD",
+   "target_id": null,
+   "observation": {
+    "id": "obs_001",
+    "kind": "SYMPTOM",
+    "symptom": "COUGH",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "originated_as": "PATIENT_REPORTED",
+    "confidence": "HIGH",
+    "attributes": {
+     "onset": null,
+     "duration": {
+      "value": 5,
+      "unit": "DAYS",
+      "approximate": true,
+      "text": "about five days"
+     },
+     "severity": null,
+     "character_over_time": [
+      {
+       "phase": "INITIAL",
+       "character": "DRY"
+      },
+      {
+       "phase": "CURRENT",
+       "character": "PRODUCTIVE"
+      }
+     ],
+     "context": []
+    },
+    "evidence": [
+     {
+      "utterance_id": "u1",
+      "role": "STATEMENT",
+      "quote": "I've been coughing for about five days",
+      "char_start": 0,
+      "char_end": 38
+     },
+     {
+      "utterance_id": "u1",
+      "role": "STATEMENT",
+      "quote": "Initially it was dry, but now I'm coughing up some mucus",
+      "char_start": 40,
+      "char_end": 96
+     }
+    ],
+    "revision": 1,
+    "conflicts_with": [],
+    "review": {
+     "state": "UNREVIEWED",
+     "at": null,
+     "corrected_fields": [],
+     "note": null
+    },
+    "extractor": {
+     "provider": "replay",
+     "model": "replay-fixture",
+     "is_replay": true,
+     "schema_version": "1.0"
+    },
+    "created_at": "2026-11-15T09:00:00Z"
+   },
+   "attributes_patch": null,
+   "added_evidence": []
+  },
+  {
+   "action": "ADD",
+   "target_id": null,
+   "observation": {
+    "id": "obs_002",
+    "kind": "SYMPTOM",
+    "symptom": "FEVER",
+    "label": null,
+    "status": "PRESENT",
+    "source": "PATIENT_REPORTED",
+    "originated_as": "PATIENT_REPORTED",
+    "confidence": "HIGH",
+    "attributes": {
+     "onset": null,
+     "duration": {
+      "value": 2,
+      "unit": "DAYS",
+      "approximate": true,
+      "text": "the last two days"
+     },
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    },
+    "evidence": [
+     {
+      "utterance_id": "u1",
+      "role": "STATEMENT",
+      "quote": "I've also had a fever for the last two days",
+      "char_start": 98,
+      "char_end": 141
+     }
+    ],
+    "revision": 1,
+    "conflicts_with": [],
+    "review": {
+     "state": "UNREVIEWED",
+     "at": null,
+     "corrected_fields": [],
+     "note": null
+    },
+    "extractor": {
+     "provider": "replay",
+     "model": "replay-fixture",
+     "is_replay": true,
+     "schema_version": "1.0"
+    },
+    "created_at": "2026-11-15T09:00:00Z"
+   },
+   "attributes_patch": null,
+   "added_evidence": []
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "replay",
+  "model": "replay-fixture",
+  "is_replay": true,
+  "latency_ms": 0
+ },
+ "warnings": [
+  "REPLAY_FIXTURE: output is a recorded fixture, not a live model call"
+ ]
+}
