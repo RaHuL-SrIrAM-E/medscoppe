@@ -53,3 +53,6 @@ opencode.json
 .agents/
 .codex/
 .github/instructions/
+
+# Output of scripts/verify-production.mjs
+artifacts/

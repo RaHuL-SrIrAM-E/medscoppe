@@ -57,9 +57,13 @@ applies to the BodyParts3D data I downloaded, before I redistribute any adapted 
 
 **Attribution I currently display**
 
-"Anatomy: BodyParts3D, (c) The Database Center for Life Science licensed under CC Attribution 4.0
-International. Adapted: merged, decimated, lung lobe volumes are illustrative approximations."
-(The copyright sign is written "(c)" only because the user-interface font cannot render it.)
+Because I do not yet know which licence applies, the application deliberately names none. It shows:
+
+"Anatomy source: BodyParts3D - Database Center for Life Science (DBCLS). Adapted for MEDSCOPE: merged and
+decimated anatomical structures. Illustrative lung volumes are generated approximations. Licence
+confirmation pending."
+
+I will replace this with whatever credit you specify for the confirmed licence.
 
 **My questions**
 
@@ -69,7 +73,7 @@ International. Adapted: merged, decimated, lung lobe volumes are illustrative ap
    attribution above, without share-alike?
 3. If instead CC BY-SA 2.1 Japan applies to these files, is the adapted data to be released under the same
    licence, and is a later CC BY-SA version acceptable?
-4. Is the attribution text above acceptable, including the "(c)" spelling and the added statement of changes?
+4. Is the interim wording above acceptable until you reply, and what exact credit text do you require once the licence is confirmed?
 5. Does anything restrict use in an educational prototype shown in a public competition, or restrict
    later commercial use?
 6. Are the FMA concept identifiers in the distributed lists free to reuse as identifiers in my registry?

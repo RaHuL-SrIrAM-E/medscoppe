@@ -15,7 +15,8 @@
     "preview": "vite preview",
     "verify:hands": "bash scripts/verify-hands.sh",
     "verify:anatomy": "bash scripts/verify-anatomy.sh",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:production": "node scripts/verify-production.mjs"
   },
   "dependencies": {
     "@iwsdk/core": "1.1.0",
@@ -30,6 +31,7 @@
     "@iwsdk/vite-plugin-dev": "1.1.0",
     "@meta-quest/metavr": "^1.8.1",
     "@types/three": "^0.185.0",
+    "playwright": "1.65.1",
     "typescript": "^5.5.0",
     "vite": "^7.1.4",
     "vitest": "^5.1.0"
