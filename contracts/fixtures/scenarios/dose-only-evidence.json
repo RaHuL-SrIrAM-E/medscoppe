@@ -1,0 +1,50 @@
+{
+ "description": "Evidence that is only dose text yields no observation at all.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u22",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "I took 500 mg of paracetamol.",
+    "start_ms": 1000,
+    "end_ms": 3000
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": []
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "OTHER",
+     "label": "paracetamol use",
+     "status": "PRESENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u22",
+       "role": "STATEMENT",
+       "quote": "I took 500 mg of paracetamol"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

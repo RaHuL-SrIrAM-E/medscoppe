@@ -1,12 +1,12 @@
 {
- "extraction_id": "ext_001",
+ "extraction_id": "ext_conflict-status_001",
  "schema_version": "1.0",
  "proposals": [
   {
    "action": "CONTRADICT",
    "target_id": "obs_known1",
    "observation": {
-    "id": "obs_001",
+    "id": "obs_conflict-status_001",
     "kind": "SYMPTOM",
     "symptom": "COUGH",
     "label": null,
@@ -49,7 +49,8 @@
     "created_at": "2026-11-15T09:00:00Z"
    },
    "attributes_patch": null,
-   "added_evidence": []
+   "added_evidence": [],
+   "new_status": null
   }
  ],
  "held_for_review": [],

@@ -39,7 +39,7 @@ def test_synthetic_consultation_end_to_end_yields_the_expected_observations():
     assert [(q["phase"], q["character"]) for q in cough["attributes"]["character_over_time"]] == [("INITIAL", "DRY"), ("CURRENT", "PRODUCTIVE")]
 
     fever = obs["FEVER"]
-    assert (fever["status"], fever["attributes"]["duration"]["value"], fever["attributes"]["duration"]["unit"]) == ("PRESENT", 2, "DAYS")
+    assert (fever["status"], fever["attributes"]["duration"]["value"], fever["attributes"]["duration"]["unit"], fever["attributes"]["duration"]["approximate"]) == ("PRESENT", 2, "DAYS", False)
 
     dysp = obs["DYSPNOEA"]
     assert dysp["status"] == "PRESENT" and dysp["attributes"]["context"] == ["EXERTION"]

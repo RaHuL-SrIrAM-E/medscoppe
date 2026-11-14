@@ -78,6 +78,48 @@ def locate_quote(text: str, quote: str) -> tuple[int, int] | None:
     return (m.start(), m.end()) if m else None
 
 
+# ----------------------------------------------------------------------------- dose text inside a quote
+# A symptom can share a sentence with a medication ("I took 500 mg of paracetamol and I have a fever"). The dose
+# content must never become an observation, but the independently supported symptom should survive. When a quote
+# contains dose text, look for a clean clause of the same utterance that itself names the symptom.
+_SYMPTOM_KEYWORDS: dict[SymptomCode, re.Pattern[str]] = {
+    SymptomCode.COUGH: re.compile(r"\bcough\w*", re.I),
+    SymptomCode.FEVER: re.compile(r"\bfever\w*|\btemperature\b", re.I),
+    SymptomCode.DYSPNOEA: re.compile(r"\bbreath\w*|\bshort of breath\b", re.I),
+    SymptomCode.CHEST_PAIN: re.compile(r"\bchest\b", re.I),
+    SymptomCode.WHEEZE: re.compile(r"\bwheez\w*", re.I),
+    SymptomCode.HAEMOPTYSIS: re.compile(r"\bblood\b", re.I),
+    SymptomCode.SORE_THROAT: re.compile(r"\bthroat\b", re.I),
+    SymptomCode.FATIGUE: re.compile(r"\btired\w*|\bfatigue\w*|\bexhaust\w*", re.I),
+    SymptomCode.NASAL_CONGESTION: re.compile(r"\bnose\b|\bnasal\b|\bcongest\w*|\bblocked\b", re.I),
+    SymptomCode.HEADACHE: re.compile(r"\bheadache\w*|\bhead\b", re.I),
+}
+_CLAUSE_BOUNDARY = re.compile(r"[.;!?]\s+|,\s*|\s+(?:and|but|because|so|then|while|although)\s+", re.I)
+
+
+def clean_clause(text: str, span: tuple[int, int], symptom: SymptomCode | None) -> tuple[int, int] | None:
+    """Within ``span`` of ``text``, the first clause that has no dose text and names ``symptom``; else None."""
+    keyword = _SYMPTOM_KEYWORDS.get(symptom) if symptom else None
+    if keyword is None:
+        return None
+    start, end = span
+    pieces: list[tuple[int, int]] = []
+    cursor = start
+    for m in _CLAUSE_BOUNDARY.finditer(text, start, end):
+        pieces.append((cursor, m.start()))
+        cursor = m.end()
+    pieces.append((cursor, end))
+    for a, b in pieces:
+        while a < b and text[a].isspace():
+            a += 1
+        while b > a and text[b - 1] in " ,.;!?":
+            b -= 1
+        clause = text[a:b]
+        if len(re.findall(r"\w", clause)) >= 2 and keyword.search(clause) and not contains_dose_text(clause):
+            return a, b
+    return None
+
+
 # ----------------------------------------------------------------------------- durations
 _WORD_NUMBERS = {
     "a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
@@ -86,7 +128,9 @@ _WORD_NUMBERS = {
 }
 _UNIT_WORDS = {"hour": DurationUnit.HOURS, "day": DurationUnit.DAYS, "week": DurationUnit.WEEKS, "month": DurationUnit.MONTHS}
 _DURATION_RE = re.compile(r"\b(\d{1,3}|[a-z]+)\s+(?:of\s+)?(hour|day|week|month)s?\b", re.I)
-_APPROX_CUE = re.compile(r"\b(about|around|roughly|approximately|nearly|almost|couple|or so|last|past)\b|~", re.I)
+# Only explicit hedging words make a duration approximate. "the last two days" states two days, so it is NOT
+# approximate, and the word "about" is never added to anyone's evidence.
+_APPROX_CUE = re.compile(r"\b(about|around|roughly|approximately|nearly|almost|couple|or so)\b|~", re.I)
 
 
 def parse_duration_text(text: str) -> tuple[int, DurationUnit] | None:
@@ -168,6 +212,7 @@ def validate_observation(
     # --- evidence -----------------------------------------------------------------------------
     evidence: list[Evidence] = []
     seen: set[tuple[str, int, int]] = set()
+    dose_dropped = 0
     for e in mo.evidence:
         u = utterances.get(e.utterance_id)
         if u is None:
@@ -177,9 +222,13 @@ def validate_observation(
         span = locate_quote(u.text, e.quote)
         if span is None:
             return _reject(RejectionReason.QUOTE_NOT_IN_UTTERANCE, mo, e.utterance_id)
+        if contains_dose_text(u.text[span[0] : span[1]]):
+            # dose content never becomes evidence. Keep only a clean clause that independently names the symptom.
+            span = clean_clause(u.text, span, mo.symptom) if e.role == EvidenceRole.STATEMENT else None
+            if span is None:
+                dose_dropped += 1
+                continue
         quote = u.text[span[0] : span[1]]  # re-cut from the source: verbatim by construction
-        if contains_dose_text(quote):
-            return _reject(RejectionReason.DOSE_OR_PRESCRIPTION_TEXT, mo, e.utterance_id)
         key = (e.utterance_id, span[0], span[1])
         if key in seen:
             continue
@@ -187,7 +236,8 @@ def validate_observation(
         evidence.append(Evidence(utterance_id=e.utterance_id, role=e.role, quote=quote, char_start=span[0], char_end=span[1]))
     statements = [e for e in evidence if e.role == EvidenceRole.STATEMENT]
     if not statements:
-        return _reject(RejectionReason.MISSING_STATEMENT_EVIDENCE, mo)
+        reason = RejectionReason.DOSE_OR_PRESCRIPTION_TEXT if dose_dropped else RejectionReason.MISSING_STATEMENT_EVIDENCE
+        return _reject(reason, mo)
 
     # --- speaker ------------------------------------------------------------------------------
     expected = _EXPECTED_SPEAKER[mo.source]
@@ -240,7 +290,9 @@ def _sanitise_attributes(
     if a.duration is not None:
         d = a.duration
         if contains_dose_text(d.text):
-            return None, warnings
+            a.duration = None
+            warnings.append("DURATION_DROPPED_DOSE_TEXT")
+            return a, warnings
         statement_text = " ".join(utterances[e.utterance_id].text for e in statements)
         span = None
         for e in statements:

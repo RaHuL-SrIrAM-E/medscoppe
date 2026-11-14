@@ -129,6 +129,7 @@ class Action(StrEnum):
     REINFORCE = "REINFORCE"
     REFINE = "REFINE"
     CONTRADICT = "CONTRADICT"
+    REVISE = "REVISE"  # a definite statement replaces an UNKNOWN status on the same observation (append-only)
 
 
 class ReviewState(StrEnum):
@@ -301,7 +302,8 @@ class Proposal(StrictModel):
     target_id: Id | None = None
     observation: Observation | None = Field(default=None, description="ADD and CONTRADICT: the new observation.")
     attributes_patch: Attributes | None = Field(default=None, description="REFINE: only fields that were null.")
-    added_evidence: list[Evidence] = Field(default_factory=list, max_length=4, description="REINFORCE and REFINE.")
+    added_evidence: list[Evidence] = Field(default_factory=list, max_length=4, description="REINFORCE, REFINE and REVISE.")
+    new_status: Status | None = Field(default=None, description="REVISE only: PRESENT or ABSENT.")
 
     @model_validator(mode="after")
     def _shape_matches_action(self) -> Proposal:
@@ -311,13 +313,18 @@ class Proposal(StrictModel):
                 raise ValueError(f"{a} requires an observation")
         elif self.observation is not None:
             raise ValueError(f"{a} must not carry a new observation")
+        if a == Action.REVISE:
+            if self.new_status not in (Status.PRESENT, Status.ABSENT):
+                raise ValueError("REVISE requires new_status PRESENT or ABSENT")
+        elif self.new_status is not None:
+            raise ValueError(f"{a} must not carry new_status")
         if a != Action.ADD and self.target_id is None:
             raise ValueError(f"{a} requires target_id")
         if a == Action.ADD and self.target_id is not None:
             raise ValueError("ADD must not carry target_id")
         if a == Action.REFINE and self.attributes_patch is None:
             raise ValueError("REFINE requires attributes_patch")
-        if a in (Action.REINFORCE, Action.REFINE) and not self.added_evidence:
+        if a in (Action.REINFORCE, Action.REFINE, Action.REVISE) and not self.added_evidence:
             raise ValueError(f"{a} requires added_evidence")
         return self
 

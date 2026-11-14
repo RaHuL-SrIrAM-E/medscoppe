@@ -114,6 +114,7 @@ def reconcile(
 
         unresolved = [r for r in same if r.status == Status.UNRESOLVED]
         definite = [r for r in same if r.status in (Status.PRESENT, Status.ABSENT)]
+        unknown = [r for r in same if r.status == Status.UNKNOWN]
         if a.status == Status.UNKNOWN:
             rejected.append(Rejection(reason_code=RejectionReason.NO_NEW_INFORMATION, symptom=a.symptom))
             continue
@@ -122,6 +123,22 @@ def reconcile(
             o = build(a, [r.id for r in unresolved][:8])
             proposals.append(Proposal(action=Action.ADD, observation=o))
             track(o)
+            continue
+        if not definite and unknown:
+            # A definite statement after UNKNOWN revises the active observation instead of creating a duplicate.
+            # History is kept: the client appends a revision. Observations from different sources are never merged.
+            t = next((r for r in reversed(unknown) if r.source == a.source), None)
+            if t is None:
+                o = build(a, [])
+                proposals.append(Proposal(action=Action.ADD, observation=o))
+                track(o)
+                continue
+            patch, _ = diff_attributes(t.attributes, a.attributes)
+            proposals.append(Proposal(action=Action.REVISE, target_id=t.id, new_status=a.status, attributes_patch=patch, added_evidence=a.evidence))
+            t.status = a.status
+            t.revision += 1
+            if patch is not None:
+                t.attributes = _merge(t.attributes, patch)
             continue
         target = (definite or same)[-1]
 

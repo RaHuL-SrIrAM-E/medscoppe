@@ -1,0 +1,31 @@
+{
+ "extraction_id": "ext_unknown-then-absent_001",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "REVISE",
+   "target_id": "obs_known_unk",
+   "observation": null,
+   "attributes_patch": null,
+   "added_evidence": [
+    {
+     "utterance_id": "u24",
+     "role": "STATEMENT",
+     "quote": "I have not had a fever",
+     "char_start": 4,
+     "char_end": 26
+    }
+   ],
+   "new_status": "ABSENT"
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": []
+}

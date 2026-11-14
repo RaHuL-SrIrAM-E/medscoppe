@@ -189,3 +189,21 @@ the BodyParts3D licence remains unconfirmed; the competition deadline is close.
 Verified against the real service: `backend/scripts/demo_extract.py`. SDK check: `google-genai` 3.3.0 matches the plan.
 **Discrepancy to note:** the SDK pulls `httpx2`, `google-auth`, `requests`, `tenacity` and `websockets` into the backend
 environment. `httpx` 0.28.1 remains installed and unaffected.
+
+## 15. Approved refinements (after Milestones 1 to 3 review)
+
+1. **"The last two days" is a two-day duration**, not an approximation. Only explicit hedging words ("about", "around",
+   "roughly", "approximately", "nearly", "almost", "a couple of", "or so") set `approximate`. The word "about" is never
+   added to evidence or duration text.
+2. **Dose content never becomes an observation, but a symptom in the same utterance survives.** A quote that contains dose
+   text is trimmed to a clean clause that itself names the symptom ("I took 500 mg of paracetamol and I have a fever"
+   yields a fever with the quote "I have a fever"). Evidence that is only dose text yields nothing. A dose in a duration
+   phrase drops the attribute, not the observation. Dose content as an observation label is rejected.
+3. **Patient-stated conditions are never diagnoses.** The doctor may dismiss them or annotate them (`annotateObservation`,
+   a new revision that changes only the note). Confirmation and correction are refused, including through conflict resolution.
+4. **Unattributed observations are held** until the doctor assigns a speaker, then the utterance is re-extracted with
+   `speaker_basis = MANUAL_SELECTION`; the held candidates are then cleared.
+5. **A definite statement after UNKNOWN revises the active observation** (new `REVISE` action: a new revision of the same
+   observation, history kept, no duplicate). Observations from different sources are never merged.
+
+`DOCTOR_CONFIRMED` still comes only from an explicit doctor action. A doctor's utterance never infers it.

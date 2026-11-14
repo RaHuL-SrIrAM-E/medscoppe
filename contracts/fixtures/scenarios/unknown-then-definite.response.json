@@ -1,0 +1,42 @@
+{
+ "extraction_id": "ext_unknown-then-definite_001",
+ "schema_version": "1.0",
+ "proposals": [
+  {
+   "action": "REVISE",
+   "target_id": "obs_known_unk",
+   "observation": null,
+   "attributes_patch": {
+    "onset": null,
+    "duration": {
+     "value": 2,
+     "unit": "DAYS",
+     "approximate": false,
+     "text": "two days"
+    },
+    "severity": null,
+    "character_over_time": [],
+    "context": []
+   },
+   "added_evidence": [
+    {
+     "utterance_id": "u23",
+     "role": "STATEMENT",
+     "quote": "I have had a fever for two days",
+     "char_start": 5,
+     "char_end": 36
+    }
+   ],
+   "new_status": "PRESENT"
+  }
+ ],
+ "held_for_review": [],
+ "rejected": [],
+ "extractor": {
+  "provider": "fixture",
+  "model": "static",
+  "is_replay": false,
+  "latency_ms": 0
+ },
+ "warnings": []
+}

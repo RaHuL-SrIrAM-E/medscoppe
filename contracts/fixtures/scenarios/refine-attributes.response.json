@@ -1,5 +1,5 @@
 {
- "extraction_id": "ext_001",
+ "extraction_id": "ext_refine-attributes_001",
  "schema_version": "1.0",
  "proposals": [
   {
@@ -35,7 +35,8 @@
      "char_start": 29,
      "char_end": 45
     }
-   ]
+   ],
+   "new_status": null
   }
  ],
  "held_for_review": [],

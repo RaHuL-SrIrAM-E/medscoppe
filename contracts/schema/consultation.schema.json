@@ -403,7 +403,8 @@
      "ADD",
      "REINFORCE",
      "REFINE",
-     "CONTRADICT"
+     "CONTRADICT",
+     "REVISE"
     ],
     "title": "Action",
     "type": "string"
@@ -877,13 +878,25 @@
       "description": "REFINE: only fields that were null."
      },
      "added_evidence": {
-      "description": "REINFORCE and REFINE.",
+      "description": "REINFORCE, REFINE and REVISE.",
       "items": {
        "$ref": "#/$defs/Evidence"
       },
       "maxItems": 4,
       "title": "Added Evidence",
       "type": "array"
+     },
+     "new_status": {
+      "anyOf": [
+       {
+        "$ref": "#/$defs/Status"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "description": "REVISE only: PRESENT or ABSENT."
      }
     },
     "required": [
@@ -1128,7 +1141,8 @@
      "ADD",
      "REINFORCE",
      "REFINE",
-     "CONTRADICT"
+     "CONTRADICT",
+     "REVISE"
     ],
     "title": "Action",
     "type": "string"

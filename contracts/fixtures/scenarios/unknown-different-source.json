@@ -1,0 +1,67 @@
+{
+ "description": "A doctor-observed finding is never merged into a patient-reported UNKNOWN: it is its own observation.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u25",
+    "speaker": "DOCTOR",
+    "speaker_basis": "SCRIPTED",
+    "text": "I can hear a wheeze on the right side.",
+    "start_ms": 1000,
+    "end_ms": 3500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known_unk",
+    "kind": "SYMPTOM",
+    "symptom": "WHEEZE",
+    "label": null,
+    "status": "UNKNOWN",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "WHEEZE",
+     "label": null,
+     "status": "PRESENT",
+     "source": "DOCTOR_OBSERVED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u25",
+       "role": "STATEMENT",
+       "quote": "I can hear a wheeze on the right side"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,67 @@
+{
+ "description": "UNKNOWN followed by a clear denial: revised to ABSENT.",
+ "request": {
+  "schema_version": "1.0",
+  "consultation_id": "scenario",
+  "data_classification": "SYNTHETIC",
+  "utterances": [
+   {
+    "id": "u24",
+    "speaker": "PATIENT",
+    "speaker_basis": "SCRIPTED",
+    "text": "No, I have not had a fever.",
+    "start_ms": 1000,
+    "end_ms": 2500
+   }
+  ],
+  "context_utterances": [],
+  "known_observations": [
+   {
+    "id": "obs_known_unk",
+    "kind": "SYMPTOM",
+    "symptom": "FEVER",
+    "label": null,
+    "status": "UNKNOWN",
+    "source": "PATIENT_REPORTED",
+    "revision": 1,
+    "attributes": {
+     "onset": null,
+     "duration": null,
+     "severity": null,
+     "character_over_time": [],
+     "context": []
+    }
+   }
+  ]
+ },
+ "model_output": {
+  "proposals": [
+   {
+    "action_hint": "ADD",
+    "target_id": null,
+    "observation": {
+     "kind": "SYMPTOM",
+     "symptom": "FEVER",
+     "label": null,
+     "status": "ABSENT",
+     "source": "PATIENT_REPORTED",
+     "confidence": "HIGH",
+     "attributes": {
+      "onset": null,
+      "duration": null,
+      "severity": null,
+      "character_over_time": [],
+      "context": []
+     },
+     "evidence": [
+      {
+       "utterance_id": "u24",
+       "role": "STATEMENT",
+       "quote": "I have not had a fever"
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

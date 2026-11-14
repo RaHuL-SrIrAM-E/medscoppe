@@ -1,12 +1,12 @@
 {
- "extraction_id": "ext_001",
+ "extraction_id": "ext_absent-drops-attributes_001",
  "schema_version": "1.0",
  "proposals": [
   {
    "action": "ADD",
    "target_id": null,
    "observation": {
-    "id": "obs_001",
+    "id": "obs_absent-drops-attributes_001",
     "kind": "SYMPTOM",
     "symptom": "FEVER",
     "label": null,
@@ -47,7 +47,8 @@
     "created_at": "2026-11-15T09:00:00Z"
    },
    "attributes_patch": null,
-   "added_evidence": []
+   "added_evidence": [],
+   "new_status": null
   }
  ],
  "held_for_review": [],

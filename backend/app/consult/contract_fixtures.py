@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from .replay import ReplayExtractionProvider
-from .schema import ExtractRequest, ModelOutput, ObservationRef, Status, schema_bundle
+from .reconcile import _merge as merge_attributes
+from .schema import Attributes, ExtractRequest, ModelOutput, ObservationRef, Status, schema_bundle
 from .service import ExtractionService
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -34,12 +35,14 @@ class StaticProvider:
         return self._output
 
 
-def deterministic_service(provider) -> ExtractionService:
+def deterministic_service(provider, tag: str = "") -> ExtractionService:
+    """``tag`` makes ids unique per scenario (production ids are random), so several fixture responses can be
+    applied to one store without looking like duplicates."""
     counters: dict[str, int] = {}
 
     def new_id(prefix: str) -> str:
         counters[prefix] = counters.get(prefix, 0) + 1
-        return f"{prefix}_{counters[prefix]:03d}"
+        return f"{prefix}_{tag}_{counters[prefix]:03d}" if tag else f"{prefix}_{counters[prefix]:03d}"
 
     return ExtractionService(provider, id_factory=new_id, now=lambda: FIXED_NOW, timer=lambda: 0.0)
 
@@ -51,7 +54,7 @@ def _dump(model) -> Any:
 def run_scenario(path: Path) -> dict[str, Any]:
     doc = json.loads(path.read_text(encoding="utf-8"))
     request = ExtractRequest.model_validate(doc["request"])
-    service = deterministic_service(StaticProvider(ModelOutput.model_validate(doc["model_output"])))
+    service = deterministic_service(StaticProvider(ModelOutput.model_validate(doc["model_output"])), tag=path.stem)
     return _dump(asyncio.run(service.extract(request)))
 
 
@@ -70,14 +73,10 @@ def refs_after(known: list[ObservationRef], response: dict[str, Any]) -> list[Ob
                 t.status = Status.UNRESOLVED
         elif t:
             t.revision += 1
-            if p["action"] == "REFINE":
-                patch = p["attributes_patch"]
-                a = t.attributes
-                a.onset = a.onset or patch["onset"]
-                a.duration = a.duration or patch["duration"]
-                a.severity = a.severity or patch["severity"]
-                a.character_over_time = [*a.character_over_time, *patch["character_over_time"]]
-                a.context = [*a.context, *[c for c in patch["context"] if c not in a.context]]
+            if p["action"] == "REVISE":
+                t.status = Status(p["new_status"])
+            if p["action"] in ("REFINE", "REVISE") and p["attributes_patch"]:
+                t.attributes = merge_attributes(t.attributes, Attributes.model_validate(p["attributes_patch"]))
     return list(refs.values())
 
 
@@ -85,7 +84,7 @@ def run_synthetic_chain() -> list[dict[str, Any]]:
     """The primary demo: three batches through the real service using the labelled replay fixture."""
     base = CONTRACTS / "fixtures" / "synthetic-respiratory"
     transcript = json.loads((base / "transcript.json").read_text(encoding="utf-8"))
-    service = deterministic_service(ReplayExtractionProvider(base / "replay.json"))
+    service = deterministic_service(ReplayExtractionProvider(base / "replay.json"), tag="syn")
     seen: list[dict[str, Any]] = []
     known: list[ObservationRef] = []
     out: list[dict[str, Any]] = []

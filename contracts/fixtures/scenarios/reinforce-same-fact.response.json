@@ -1,5 +1,5 @@
 {
- "extraction_id": "ext_001",
+ "extraction_id": "ext_reinforce-same-fact_001",
  "schema_version": "1.0",
  "proposals": [
   {
@@ -15,7 +15,8 @@
      "char_start": 5,
      "char_end": 22
     }
-   ]
+   ],
+   "new_status": null
   }
  ],
  "held_for_review": [],

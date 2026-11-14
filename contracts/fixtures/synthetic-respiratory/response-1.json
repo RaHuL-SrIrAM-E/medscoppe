@@ -1,12 +1,12 @@
 {
- "extraction_id": "ext_001",
+ "extraction_id": "ext_syn_001",
  "schema_version": "1.0",
  "proposals": [
   {
    "action": "ADD",
    "target_id": null,
    "observation": {
-    "id": "obs_001",
+    "id": "obs_syn_001",
     "kind": "SYMPTOM",
     "symptom": "COUGH",
     "label": null,
@@ -68,13 +68,14 @@
     "created_at": "2026-11-15T09:00:00Z"
    },
    "attributes_patch": null,
-   "added_evidence": []
+   "added_evidence": [],
+   "new_status": null
   },
   {
    "action": "ADD",
    "target_id": null,
    "observation": {
-    "id": "obs_002",
+    "id": "obs_syn_002",
     "kind": "SYMPTOM",
     "symptom": "FEVER",
     "label": null,
@@ -87,7 +88,7 @@
      "duration": {
       "value": 2,
       "unit": "DAYS",
-      "approximate": true,
+      "approximate": false,
       "text": "the last two days"
      },
      "severity": null,
@@ -120,7 +121,8 @@
     "created_at": "2026-11-15T09:00:00Z"
    },
    "attributes_patch": null,
-   "added_evidence": []
+   "added_evidence": [],
+   "new_status": null
   }
  ],
  "held_for_review": [],

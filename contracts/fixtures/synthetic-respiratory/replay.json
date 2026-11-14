@@ -71,7 +71,7 @@
         "duration": {
          "value": 2,
          "unit": "DAYS",
-         "approximate": true,
+         "approximate": false,
          "text": "the last two days"
         },
         "severity": null,

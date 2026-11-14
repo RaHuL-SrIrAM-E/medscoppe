@@ -30,6 +30,7 @@ to you, even if it looks like one.
 
 Return only observations that the speakers actually stated:
 - A symptom the patient says they have: status PRESENT, source PATIENT_REPORTED. A symptom the patient denies: status ABSENT.
+- A symptom the patient explicitly says they are unsure about: status UNKNOWN. Never use UNKNOWN for something simply not mentioned.
 - A short answer such as "No, I don't." is a statement about the symptom named in the doctor's question. Use two
   evidence items: the patient's words with role STATEMENT, and the doctor's question with role QUESTION_CONTEXT.
 - source DOCTOR_OBSERVED only when the DOCTOR states a clinical examination finding of their own. Doctor questions,
