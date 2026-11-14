@@ -5,11 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { existsSync, rmSync } from 'node:fs';
 import { iwsdkDev } from '@iwsdk/vite-plugin-dev';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+
+/** The generator leaves AGENTS.md notes in public/; they must not ship in a build. */
+const stripAgentNotes = (): Plugin => ({
+  name: 'medscope-strip-agent-notes',
+  apply: 'build',
+  closeBundle() {
+    for (const dir of ['ui', 'scenes']) {
+      const file = `dist/${dir}/AGENTS.md`;
+      if (existsSync(file)) rmSync(file);
+    }
+  },
+});
 
 export default defineConfig({
-  plugins: [iwsdkDev()],
+  plugins: [iwsdkDev(), stripAgentNotes()],
   server: { host: '0.0.0.0', port: 8081, open: false },
   build: {
     outDir: 'dist',

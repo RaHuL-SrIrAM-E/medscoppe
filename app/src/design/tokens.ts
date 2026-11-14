@@ -9,6 +9,7 @@ export const systemColors = {
   muscular: 0xe0675a, // muscle coral
   respiratory: 0x4cc9e6, // respiratory cyan
   nervous: 0xf2c14e, // nervous gold
+  surface: 0x9fb4c8, // body shell, cool steel
 } as const;
 
 export type AnatomicalSystemId = keyof typeof systemColors;

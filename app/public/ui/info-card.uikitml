@@ -1,0 +1,53 @@
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2;
+    width: 40;
+    padding-left: 2.4;
+    padding-right: 2.4;
+    padding-top: 2.2;
+    padding-bottom: 2.2;
+    background-color: #0e1622;
+    border-color: #7cf2d4;
+    border-width: 0.25;
+    border-radius: 4;
+  }
+  .title { font-size: 3.2; font-weight: 700; color: #f2f7fc; }
+  .subtitle { font-size: 2; color: #7cf2d4; }
+  .partof { font-size: 2; color: #9db3c9; }
+  .body { font-size: 2.1; color: #dbe8f5; }
+  .note { font-size: 1.7; color: #f2c14e; }
+  .notice { font-size: 2; font-weight: 600; color: #ffb454; }
+  .row { display: flex; flex-direction: row; gap: 1.2; margin-top: 0.8; }
+  .btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-left: 2;
+    padding-right: 2;
+    margin-right: 1.4;
+    padding-top: 1.4;
+    padding-bottom: 1.4;
+    background-color: #142033;
+    border-color: #2a3b52;
+    border-width: 0.2;
+    border-radius: 3;
+    cursor: pointer;
+  }
+  .btn-label { font-size: 2.2; font-weight: 600; color: #cfe3f5; }
+</style>
+<div class="card" id="card">
+  <span class="title" id="title">Structure</span>
+  <span class="subtitle" id="subtitle">System</span>
+  <span class="partof" id="partof">Part of</span>
+  <span class="notice" id="notice">Illustrative.</span>
+  <span class="body" id="body">Description</span>
+  <span class="note" id="note">Educational text. Pending clinician review.</span>
+  <div class="row" id="row">
+    <button class="btn" id="btn-isolate"><span class="btn-label" id="btn-isolate-label">Isolate</span></button>
+    <button class="btn" id="btn-details"><span class="btn-label" id="btn-details-label">Details</span></button>
+    <button class="btn" id="btn-close"><span class="btn-label" id="btn-close-label">Close</span></button>
+  </div>
+</div>

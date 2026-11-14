@@ -1,16 +1,18 @@
 import { createSystem, type Entity, Quaternion, Vector3 } from '@iwsdk/core';
 import { intentBus, type IntentSource } from '../core/intents.js';
 import { AnatomyRoot } from '../anatomy/anatomy-component.js';
+import { anatomyStore } from '../anatomy/anatomy-state.js';
 
 const TAP_MAX_MS = 600;
 const ROTATE_THRESHOLD_RAD = (4 * Math.PI) / 180;
 /** Model yaw per radian of hand-ray sweep. >1 so a small arm motion spins it. */
 const SWEEP_GAIN = 2;
 const SMOOTHING = 14;
-const IGNORED = new Set(['halo']);
 
 type RayHit = { pointerPosition?: { x: number; y: number; z: number } };
 type PointerLike = {
+  pointerId?: number;
+  currentObject?: { setPointerCapture?: (id: number) => void };
   object?: { name?: string };
   pointerType?: string;
   intersection?: RayHit;
@@ -112,16 +114,31 @@ export class AnatomyPointerSystem extends createSystem({
     this.releaseListener = null;
   }
 
+  private structureIdFor(nodeName: string): string {
+    return anatomyStore.ready ? (anatomyStore.getRegistry().idForNode(nodeName) ?? '') : '';
+  }
+
+  private isStructure(id: string): boolean {
+    const def = anatomyStore.ready ? anatomyStore.getRegistry().get(id) : undefined;
+    return !!def && def.kind === 'structure' && def.system !== 'surface';
+  }
+
   private bind(entity: Entity): void {
     const object = entity.object3D as unknown as Spinnable | null;
     if (!object) return;
     this.target = object;
 
     const down = (e: PointerLike): void => {
+      // Capture the pointer for the duration of the press. IWSDK's pointer state machine
+      // ignores a release that arrives while the ray has no intersection (the ray swept off
+      // the thin model), leaving it stuck in SELECT so the NEXT pinch is silently dropped.
+      // While captured the pointer keeps its intersection, so the release is processed;
+      // the pointer layer then clears the capture itself. Do not release it manually.
+      if (e.pointerId !== undefined) e.currentObject?.setPointerCapture?.(e.pointerId);
       this.pressed = true;
       this.rotating = false;
       this.pressStart = performance.now();
-      this.pressStructure = e.object?.name ?? '';
+      this.pressStructure = this.structureIdFor(e.object?.name ?? '');
       this.source = e.pointerType === 'mouse' ? 'desktop' : 'hand';
       this.space = this.source === 'hand' ? this.nearestSpace(e.intersection) : null;
       this.modelYaw0 = object.rotation.y;
@@ -142,8 +159,7 @@ export class AnatomyPointerSystem extends createSystem({
         intentBus.emit({ type: 'ROTATE_MODEL', phase: 'end', yawDegrees }, this.source);
       } else if (
         performance.now() - this.pressStart < TAP_MAX_MS &&
-        this.pressStructure &&
-        !IGNORED.has(this.pressStructure)
+        this.isStructure(this.pressStructure)
       ) {
         intentBus.emit(
           { type: 'SELECT_STRUCTURE', structureId: this.pressStructure },
@@ -178,3 +194,4 @@ export class AnatomyPointerSystem extends createSystem({
     this.target.rotation.y += (this.desiredYaw - this.target.rotation.y) * k;
   }
 }
+

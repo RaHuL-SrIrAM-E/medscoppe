@@ -2,7 +2,7 @@ import { intentBus } from '../core/intents.js';
 import { anatomicalSystemIds } from '../design/tokens.js';
 
 /**
- * Development-only input path: keys 1-4 switch anatomical system. It emits the
+ * Development-only input path: keys 1-5 switch anatomical system (1 skeletal, 3 respiratory, 5 body shell). It emits the
  * same intents the hand and voice adapters will, proving the shared pipeline.
  * Real hand interaction remains mandatory for the shipped experience.
  */

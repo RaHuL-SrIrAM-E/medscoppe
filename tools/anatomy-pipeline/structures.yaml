@@ -1,0 +1,110 @@
+# MEDSCOPE anatomy spec: the single source of truth for stable structure IDs.
+#
+# ID scheme:  <system>.<class>.<name>[.<side>]   lowercase, ASCII, dot-separated.
+#   - IDs are MEDSCOPE-owned and never derived from BodyParts3D file names (FJ####).
+#   - Each structure is anchored to an ontology concept via `fma` (Foundational
+#     Model of Anatomy) so it can later be linked to clinical vocabularies.
+#   - Renaming an id is a breaking change: scenarios, evidence and voice aliases refer to it.
+#
+# Kinds:
+#   group     - no geometry; organises structures in the hierarchy.
+#   structure - one GLB mesh node whose node name equals its id.
+#
+# Geometry selection (structures only):
+#   concept:  BodyParts3D concept id; its element meshes are merged.
+#   intersect_isa: keep only elements that are also in this is-a concept (e.g. pulmonary artery).
+#   envelope: generate an approximate surface from the concept's geometry (see build_anatomy.py).
+#   subtract: concept ids whose elements are removed from `concept`
+#             (BodyParts3D lobe concepts include their bronchial tree files).
+#   concepts: merge several concepts instead of one.
+#   target_tris: decimation target (triangles). Whole-scene budget is ~150k for Quest.
+#   clip_below_y: drop geometry below this height (metres, model space).
+
+source:
+  name: BodyParts3D
+  release: "4.0"
+  archive: partof_BP3D_4.0_obj_99
+  # The credit wording the licensor prescribes. It is NOT a statement that the licence is confirmed:
+  # status is UNCONFIRMED, see docs/asset-licenses.md.
+  attribution: "BodyParts3D, © The Database Center for Life Science licensed under CC Attribution 4.0 International"
+  url: https://dbarchive.biosciencedbc.jp/data/bodyparts3d/LATEST/
+
+# Model-space origin: mid-thorax, in BodyParts3D millimetres (X right-left, Y antero-posterior, Z up).
+origin_mm: [0, -100, 1250]
+
+systems:
+  respiratory: {name: Respiratory system}
+  skeletal:    {name: Skeletal system}
+  surface:     {name: Body surface}
+
+nodes:
+  # ---------------------------------------------------------------- respiratory
+  - {kind: group, id: respiratory, name: Respiratory system, system: respiratory}
+  - {kind: group, id: respiratory.lung.right, name: Right lung, system: respiratory, parent: respiratory, fma: FMA7309, aliases: [right lung]}
+  - {kind: group, id: respiratory.lung.left,  name: Left lung,  system: respiratory, parent: respiratory, fma: FMA7310, aliases: [left lung]}
+  - {kind: group, id: respiratory.airway, name: Airways, system: respiratory, parent: respiratory, aliases: [airway, airways, bronchial tree]}
+
+  # Lung parenchyma surfaces are NOT in BodyParts3D 4.0 (lobes are airways + vessels). Each lobe
+  # below is an APPROXIMATE envelope generated from that lobe's own airway and vessel geometry
+  # (see build_anatomy.py: envelope). It is flagged approximate in the registry and the UI.
+  - {kind: structure, id: respiratory.lung.right.upper-lobe,  name: Right upper lobe (illustrative volume),  system: respiratory, parent: respiratory.lung.right, fma: FMA7333, approximate: true, envelope: {lung: right, concept: FMA7333}, target_tris: 4500, aliases: [right upper lobe]}
+  - {kind: structure, id: respiratory.lung.right.middle-lobe, name: Right middle lobe (illustrative volume), system: respiratory, parent: respiratory.lung.right, fma: FMA7383, approximate: true, envelope: {lung: right, concept: FMA7383}, target_tris: 3000, aliases: [right middle lobe]}
+  - {kind: structure, id: respiratory.lung.right.lower-lobe,  name: Right lower lobe (illustrative volume),  system: respiratory, parent: respiratory.lung.right, fma: FMA7337, approximate: true, envelope: {lung: right, concept: FMA7337}, target_tris: 5000, aliases: [right lower lobe]}
+  - {kind: structure, id: respiratory.lung.left.upper-lobe,   name: Left upper lobe (illustrative volume),   system: respiratory, parent: respiratory.lung.left,  fma: FMA7370, approximate: true, envelope: {lung: left, concept: FMA7370}, target_tris: 4500, aliases: [left upper lobe]}
+  - {kind: structure, id: respiratory.lung.left.lower-lobe,   name: Left lower lobe (illustrative volume),   system: respiratory, parent: respiratory.lung.left,  fma: FMA7371, approximate: true, envelope: {lung: left, concept: FMA7371}, target_tris: 5000, aliases: [left lower lobe]}
+
+  # Pulmonary vessels: real BodyParts3D geometry, split by the dataset's own is-a classes.
+  - {kind: group, id: respiratory.vessel, name: Pulmonary vessels, system: respiratory, parent: respiratory, aliases: [pulmonary vessels, pulmonary vasculature]}
+  - {kind: structure, id: respiratory.vessel.pulmonary-artery.right, name: Right pulmonary arteries, system: respiratory, parent: respiratory.vessel, fma: FMA66326, concept: FMA7309, intersect_isa: FMA66326, target_tris: 4000, aliases: [right pulmonary arteries]}
+  - {kind: structure, id: respiratory.vessel.pulmonary-artery.left,  name: Left pulmonary arteries,  system: respiratory, parent: respiratory.vessel, fma: FMA66326, concept: FMA7310, intersect_isa: FMA66326, target_tris: 3000, aliases: [left pulmonary arteries]}
+  - {kind: structure, id: respiratory.vessel.pulmonary-vein.right,   name: Right pulmonary veins,   system: respiratory, parent: respiratory.vessel, fma: FMA66643, concept: FMA7309, intersect_isa: FMA66643, target_tris: 3500, aliases: [right pulmonary veins]}
+  - {kind: structure, id: respiratory.vessel.pulmonary-vein.left,    name: Left pulmonary veins,    system: respiratory, parent: respiratory.vessel, fma: FMA66643, concept: FMA7310, intersect_isa: FMA66643, target_tris: 2500, aliases: [left pulmonary veins]}
+
+  - {kind: structure, id: respiratory.airway.trachea,             name: Trachea,            system: respiratory, parent: respiratory.airway, fma: FMA7394, concept: FMA7394, target_tris: 1500, aliases: [trachea, windpipe]}
+  - {kind: structure, id: respiratory.airway.main-bronchus.right, name: Right main bronchus, system: respiratory, parent: respiratory.airway, fma: FMA7395, concept: FMA7395, target_tris: 900,  aliases: [right main bronchus, right bronchus]}
+  - {kind: structure, id: respiratory.airway.main-bronchus.left,  name: Left main bronchus,  system: respiratory, parent: respiratory.airway, fma: FMA7396, concept: FMA7396, target_tris: 900,  aliases: [left main bronchus, left bronchus]}
+  - {kind: structure, id: respiratory.airway.bronchial-tree.right.upper-lobe,  name: Right upper lobe bronchi,  system: respiratory, parent: respiratory.airway, fma: FMA31744, concept: FMA31744, target_tris: 2200}
+  - {kind: structure, id: respiratory.airway.bronchial-tree.right.middle-lobe, name: Right middle lobe bronchi, system: respiratory, parent: respiratory.airway, fma: FMA31741, concept: FMA31741, target_tris: 1500}
+  - {kind: structure, id: respiratory.airway.bronchial-tree.right.lower-lobe,  name: Right lower lobe bronchi,  system: respiratory, parent: respiratory.airway, fma: FMA31747, concept: FMA31747, target_tris: 2600}
+  - {kind: structure, id: respiratory.airway.bronchial-tree.left.upper-lobe,   name: Left upper lobe bronchi,   system: respiratory, parent: respiratory.airway, fma: FMA31746, concept: FMA31746, target_tris: 1500}
+  - {kind: structure, id: respiratory.airway.bronchial-tree.left.lower-lobe,   name: Left lower lobe bronchi,   system: respiratory, parent: respiratory.airway, fma: FMA31748, concept: FMA31748, target_tris: 1800}
+
+  - {kind: structure, id: respiratory.diaphragm, name: Diaphragm, system: respiratory, parent: respiratory, fma: FMA13295, concept: FMA13295, target_tris: 3000, aliases: [diaphragm]}
+
+  # ------------------------------------------------------------------- skeletal
+  - {kind: group, id: skeletal, name: Skeletal system, system: skeletal}
+  - {kind: group, id: skeletal.skull-group, name: Head, system: skeletal, parent: skeletal}
+  - {kind: structure, id: skeletal.skull,    name: Skull,    system: skeletal, parent: skeletal.skull-group, fma: FMA46565, concept: FMA46565, subtract: [FMA52748], target_tris: 9000, aliases: [skull, cranium]}
+  - {kind: structure, id: skeletal.mandible, name: Mandible, system: skeletal, parent: skeletal.skull-group, fma: FMA52748, concept: FMA52748, target_tris: 2500, aliases: [mandible, jaw]}
+
+  - {kind: group, id: skeletal.vertebral-column, name: Vertebral column, system: skeletal, parent: skeletal, fma: FMA13478, aliases: [spine, vertebral column, backbone]}
+  - {kind: group, id: skeletal.vertebral-column.cervical, name: Cervical vertebrae, system: skeletal, parent: skeletal.vertebral-column}
+  - {kind: group, id: skeletal.vertebral-column.thoracic, name: Thoracic vertebrae, system: skeletal, parent: skeletal.vertebral-column}
+  - {kind: group, id: skeletal.vertebral-column.lumbar,   name: Lumbar vertebrae,   system: skeletal, parent: skeletal.vertebral-column}
+  - {foreach: {v: [[c1, atlas, Atlas (C1)], [c2, axis, Axis (C2)], [c3, third cervical vertebra, C3], [c4, fourth cervical vertebra, C4], [c5, fifth cervical vertebra, C5], [c6, sixth cervical vertebra, C6], [c7, seventh cervical vertebra, C7]]},
+     kind: structure, id: "skeletal.vertebral-column.cervical.{v0}", name: "{v2}", system: skeletal, parent: skeletal.vertebral-column.cervical, match_name: "{v1}", target_tris: 900}
+  - {foreach: {v: [[t1, first, T1], [t2, second, T2], [t3, third, T3], [t4, fourth, T4], [t5, fifth, T5], [t6, sixth, T6], [t7, seventh, T7], [t8, eighth, T8], [t9, ninth, T9], [t10, tenth, T10], [t11, eleventh, T11], [t12, twelfth, T12]]},
+     kind: structure, id: "skeletal.vertebral-column.thoracic.{v0}", name: "{v2}", system: skeletal, parent: skeletal.vertebral-column.thoracic, match_name: "{v1} thoracic vertebra", target_tris: 1000}
+  - {foreach: {v: [[l1, first, L1], [l2, second, L2], [l3, third, L3], [l4, fourth, L4], [l5, fifth, L5]]},
+     kind: structure, id: "skeletal.vertebral-column.lumbar.{v0}", name: "{v2}", system: skeletal, parent: skeletal.vertebral-column.lumbar, match_name: "{v1} lumbar vertebra", target_tris: 1100}
+  - {kind: structure, id: skeletal.vertebral-column.sacrum, name: Sacrum, system: skeletal, parent: skeletal.vertebral-column, fma: FMA16202, concept: FMA16202, target_tris: 2200, aliases: [sacrum]}
+
+  - {kind: group, id: skeletal.thoracic-cage, name: Thoracic cage, system: skeletal, parent: skeletal, fma: FMA7480, aliases: [rib cage, ribcage, thoracic cage, ribs]}
+  - {foreach: {side: [right, left], n: [[1, first], [2, second], [3, third], [4, fourth], [5, fifth], [6, sixth], [7, seventh], [8, eighth], [9, ninth], [10, tenth], [11, eleventh], [12, twelfth]]},
+     kind: structure, id: "skeletal.thoracic-cage.rib.{side}.{n0}", name: "{side} rib {n0}", system: skeletal, parent: skeletal.thoracic-cage, match_name: "{side} {n1} rib", target_tris: 900}
+  - {kind: structure, id: skeletal.thoracic-cage.sternum, name: Sternum, system: skeletal, parent: skeletal.thoracic-cage, fma: FMA7485, concept: FMA7485, target_tris: 1800, aliases: [sternum, breastbone]}
+  - {kind: structure, id: skeletal.thoracic-cage.costal-cartilages, name: Costal cartilages, system: skeletal, parent: skeletal.thoracic-cage, match_regex: "costal cartilage$", target_tris: 2400, aliases: [costal cartilages]}
+
+  - {kind: group, id: skeletal.shoulder-girdle, name: Shoulder girdle, system: skeletal, parent: skeletal}
+  - {kind: structure, id: skeletal.shoulder-girdle.clavicle.right, name: Right clavicle, system: skeletal, parent: skeletal.shoulder-girdle, fma: FMA13322, concept: FMA13322, target_tris: 700, aliases: [right clavicle, right collarbone]}
+  - {kind: structure, id: skeletal.shoulder-girdle.clavicle.left,  name: Left clavicle,  system: skeletal, parent: skeletal.shoulder-girdle, fma: FMA13323, concept: FMA13323, target_tris: 700, aliases: [left clavicle, left collarbone]}
+  - {kind: structure, id: skeletal.shoulder-girdle.scapula.right,  name: Right scapula,  system: skeletal, parent: skeletal.shoulder-girdle, fma: FMA13395, concept: FMA13395, target_tris: 3000, aliases: [right scapula, right shoulder blade]}
+  - {kind: structure, id: skeletal.shoulder-girdle.scapula.left,   name: Left scapula,   system: skeletal, parent: skeletal.shoulder-girdle, fma: FMA13396, concept: FMA13396, target_tris: 3000, aliases: [left scapula, left shoulder blade]}
+
+  - {kind: group, id: skeletal.pelvic-girdle, name: Pelvic girdle, system: skeletal, parent: skeletal}
+  - {kind: structure, id: skeletal.pelvic-girdle.hip-bone.right, name: Right hip bone, system: skeletal, parent: skeletal.pelvic-girdle, fma: FMA16586, concept: FMA16586, target_tris: 1800, aliases: [right hip bone]}
+  - {kind: structure, id: skeletal.pelvic-girdle.hip-bone.left,  name: Left hip bone,  system: skeletal, parent: skeletal.pelvic-girdle, fma: FMA16587, concept: FMA16587, target_tris: 1800, aliases: [left hip bone]}
+
+  # -------------------------------------------------------------------- surface
+  - {kind: group, id: surface, name: Body surface, system: surface}
+  - {kind: structure, id: surface.torso, name: Torso surface, system: surface, parent: surface, fma: FMA7163, concept: FMA7163, target_tris: 7000, clip_below_y: -0.5, aliases: [skin, body surface, torso]}

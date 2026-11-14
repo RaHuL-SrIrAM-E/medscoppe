@@ -1,0 +1,42 @@
+{
+ "schema": 1,
+ "reviewStatus": "unreviewed",
+ "note": "Standard anatomical reference statements authored for MEDSCOPE. Educational only; not clinical guidance. Requires clinician review before any clinical use.",
+ "entries": {
+  "respiratory.airway.trachea": "The trachea (windpipe) is a flexible tube held open by C-shaped cartilage rings. It carries air from the larynx to the two main bronchi, dividing at the carina.",
+  "respiratory.airway.main-bronchus.right": "The right main bronchus is shorter, wider and more vertical than the left.",
+  "respiratory.airway.main-bronchus.left": "The left main bronchus is longer and more horizontal than the right, and passes beneath the arch of the aorta.",
+  "respiratory.airway.bronchial-tree.right.upper-lobe": "Lobar and segmental bronchi supplying the right upper lobe.",
+  "respiratory.airway.bronchial-tree.right.middle-lobe": "Lobar and segmental bronchi supplying the right middle lobe.",
+  "respiratory.airway.bronchial-tree.right.lower-lobe": "Lobar and segmental bronchi supplying the right lower lobe.",
+  "respiratory.airway.bronchial-tree.left.upper-lobe": "Lobar and segmental bronchi supplying the left upper lobe, including the lingula.",
+  "respiratory.airway.bronchial-tree.left.lower-lobe": "Lobar and segmental bronchi supplying the left lower lobe.",
+  "respiratory.lung.right.upper-lobe": "The right upper lobe has three bronchopulmonary segments: apical, posterior and anterior.",
+  "respiratory.lung.right.middle-lobe": "The right middle lobe has two bronchopulmonary segments: lateral and medial.",
+  "respiratory.lung.right.lower-lobe": "The right lower lobe has a superior segment and four basal segments: medial, anterior, lateral and posterior.",
+  "respiratory.lung.left.upper-lobe": "The left upper lobe includes the lingula, the left counterpart of the right middle lobe.",
+  "respiratory.lung.left.lower-lobe": "The left lower lobe has a superior segment and the basal segments.",
+  "respiratory.vessel.pulmonary-artery.right": "Pulmonary arteries carry deoxygenated blood from the right ventricle to the lungs. Shown in blue by atlas convention.",
+  "respiratory.vessel.pulmonary-artery.left": "Pulmonary arteries carry deoxygenated blood from the right ventricle to the lungs. Shown in blue by atlas convention.",
+  "respiratory.vessel.pulmonary-vein.right": "Pulmonary veins return oxygenated blood from the lungs to the left atrium. Shown in red by atlas convention.",
+  "respiratory.vessel.pulmonary-vein.left": "Pulmonary veins return oxygenated blood from the lungs to the left atrium. Shown in red by atlas convention.",
+  "respiratory.diaphragm": "The diaphragm is a dome-shaped muscle separating the thorax from the abdomen. It is the main muscle of inspiration and is supplied by the phrenic nerve.",
+  "skeletal.skull": "The skull protects the brain and forms the framework of the face.",
+  "skeletal.mandible": "The mandible is the lower jaw, the only freely movable bone of the skull.",
+  "skeletal.thoracic-cage.sternum": "The sternum (breastbone) has three parts: the manubrium, the body and the xiphoid process.",
+  "skeletal.thoracic-cage.costal-cartilages": "Costal cartilages connect the upper ribs to the sternum and give the chest wall flexibility.",
+  "skeletal.vertebral-column.sacrum": "The sacrum is formed by fused vertebrae and joins the spine to the pelvis.",
+  "skeletal.shoulder-girdle.clavicle.right": "The clavicle (collarbone) links the sternum to the scapula.",
+  "skeletal.shoulder-girdle.clavicle.left": "The clavicle (collarbone) links the sternum to the scapula.",
+  "skeletal.shoulder-girdle.scapula.right": "The scapula (shoulder blade) lies on the posterior chest wall.",
+  "skeletal.shoulder-girdle.scapula.left": "The scapula (shoulder blade) lies on the posterior chest wall.",
+  "skeletal.pelvic-girdle.hip-bone.right": "The hip bone joins the sacrum and its pair to form the pelvis.",
+  "skeletal.pelvic-girdle.hip-bone.left": "The hip bone joins the sacrum and its pair to form the pelvis."
+ },
+ "prefixes": {
+  "skeletal.thoracic-cage.rib.": "There are twelve pairs of ribs. Ribs 1 to 7 attach directly to the sternum through costal cartilage, ribs 8 to 10 attach indirectly, and ribs 11 and 12 are free-ended.",
+  "skeletal.vertebral-column.cervical.": "There are seven cervical vertebrae, supporting the head and neck.",
+  "skeletal.vertebral-column.thoracic.": "There are twelve thoracic vertebrae. Each articulates with a pair of ribs.",
+  "skeletal.vertebral-column.lumbar.": "There are five lumbar vertebrae, the largest of the mobile spine."
+ }
+}
