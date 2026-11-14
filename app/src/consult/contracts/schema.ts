@@ -30,7 +30,7 @@ export const Character = z.enum(['DRY', 'PRODUCTIVE']);
 export const Phase = z.enum(['INITIAL', 'CURRENT']);
 export const Context = z.enum(['EXERTION', 'REST', 'NIGHT']);
 export const EvidenceRole = z.enum(['STATEMENT', 'QUESTION_CONTEXT']);
-export const Action = z.enum(['ADD', 'REINFORCE', 'REFINE', 'CONTRADICT']);
+export const Action = z.enum(['ADD', 'REINFORCE', 'REFINE', 'CONTRADICT', 'REVISE']);
 export const ReviewState = z.enum(['UNREVIEWED', 'CONFIRMED', 'CORRECTED', 'REJECTED']);
 export const RejectionReason = z.enum([
   'UNKNOWN_UTTERANCE', 'STATEMENT_NOT_IN_NEW_UTTERANCES', 'QUOTE_NOT_IN_UTTERANCE', 'MISSING_STATEMENT_EVIDENCE',
@@ -169,16 +169,20 @@ export const Proposal = z
     observation: Observation.nullable().default(null),
     attributes_patch: Attributes.nullable().default(null),
     added_evidence: z.array(Evidence).max(4).default([]),
+    new_status: Status.nullable().default(null),
   })
   .superRefine((p, ctx) => {
     const bad = (message: string) => ctx.addIssue({ code: 'custom', message });
     if (p.action === 'ADD' || p.action === 'CONTRADICT') {
       if (p.observation === null) bad(`${p.action} requires an observation`);
     } else if (p.observation !== null) bad(`${p.action} must not carry a new observation`);
+    if (p.action === 'REVISE') {
+      if (p.new_status !== 'PRESENT' && p.new_status !== 'ABSENT') bad('REVISE requires new_status PRESENT or ABSENT');
+    } else if (p.new_status !== null) bad(`${p.action} must not carry new_status`);
     if (p.action !== 'ADD' && p.target_id === null) bad(`${p.action} requires target_id`);
     if (p.action === 'ADD' && p.target_id !== null) bad('ADD must not carry target_id');
     if (p.action === 'REFINE' && p.attributes_patch === null) bad('REFINE requires attributes_patch');
-    if ((p.action === 'REINFORCE' || p.action === 'REFINE') && p.added_evidence.length === 0) bad(`${p.action} requires added_evidence`);
+    if ((p.action === 'REINFORCE' || p.action === 'REFINE' || p.action === 'REVISE') && p.added_evidence.length === 0) bad(`${p.action} requires added_evidence`);
   });
 export type Proposal = z.infer<typeof Proposal>;
 

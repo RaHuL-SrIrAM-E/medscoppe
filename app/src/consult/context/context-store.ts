@@ -9,7 +9,8 @@
  *  - DOCTOR_OBSERVED (a doctor-stated finding) and DOCTOR_CONFIRMED (a doctor's explicit confirmation) stay distinct;
  *    `originated_as` keeps who first reported an observation across all revisions.
  *  - Conflicting statements stay UNRESOLVED until the doctor resolves them explicitly.
- *  - A patient-stated condition is never confirmable: there is no diagnosis support.
+ *  - A patient-stated condition is never confirmable: there is no diagnosis support. The doctor may annotate or dismiss it.
+ *  - A definite statement after UNKNOWN revises the active observation (a new revision), never a duplicate.
  *  - Applying the same extraction response twice is a no-op.
  */
 import {
@@ -28,6 +29,7 @@ export type EventType =
   | 'DOCTOR_CONFIRMED'
   | 'DOCTOR_CORRECTED'
   | 'DOCTOR_REJECTED'
+  | 'DOCTOR_ANNOTATED'
   | 'CONFLICT_RESOLVED'
   | 'HELD_CLEARED';
 
@@ -199,6 +201,19 @@ function applyProposal(state: ConsultationState, p: Proposal, notes: string[]): 
       }
       return appendRevision(state, revise(t, { evidence: mergeEvidence(t.evidence, p.added_evidence) }));
     }
+    case 'REVISE': {
+      const t = p.target_id ? current(state, p.target_id) : undefined;
+      if (!t || !p.new_status) {
+        notes.push('IGNORED_UNKNOWN_TARGET');
+        return state;
+      }
+      if (t.status !== 'UNKNOWN') {
+        notes.push('REVISE_TARGET_NOT_UNKNOWN');
+        return state;
+      }
+      const merged = p.attributes_patch ? mergeAttributes(t.attributes, p.attributes_patch).merged : t.attributes;
+      return appendRevision(state, revise(t, { status: p.new_status, attributes: merged, evidence: mergeEvidence(t.evidence, p.added_evidence) }));
+    }
     case 'REFINE': {
       const t = p.target_id ? current(state, p.target_id) : undefined;
       if (!t || !p.attributes_patch) {
@@ -299,6 +314,20 @@ export function correctObservation(state: ConsultationState, id: string, patch: 
   return ok(log(next, at, 'DOCTOR_CORRECTED', [id], { fields: corrected }));
 }
 
+/**
+ * The doctor adds a note to an observation without changing its status, source or attributes. This is how a doctor
+ * comments on a patient-stated condition: there is deliberately no way to promote it to a confirmed diagnosis.
+ */
+export function annotateObservation(state: ConsultationState, id: string, note: string, at: string): ActionResult {
+  const a = actionable(state, id);
+  if ('error' in a) return fail(state, a.error);
+  const text = note.trim();
+  if (text.length === 0 || text.length > 200) return fail(state, 'INVALID_PATCH');
+  if (a.o.review.note === text) return ok(state);
+  const next = appendRevision(state, revise(a.o, { review: { ...a.o.review, at, note: text } }));
+  return ok(log(next, at, 'DOCTOR_ANNOTATED', [id]));
+}
+
 /** The doctor rejects an observation. It is hidden from the view but kept in history. */
 export function rejectObservation(state: ConsultationState, id: string, at: string, note?: string): ActionResult {
   const a = actionable(state, id);
@@ -314,6 +343,7 @@ export function resolveConflict(state: ConsultationState, keepId: string, at: st
   if ('error' in a) return fail(state, a.error);
   const kept = a.o;
   if (kept.status !== 'UNRESOLVED' || kept.conflicts_with.length === 0) return fail(state, 'NOT_IN_CONFLICT');
+  if (kept.kind === 'PATIENT_STATED_CONDITION') return fail(state, 'CONDITION_NOT_CONFIRMABLE');
   const statedStatus = [...history(state, keepId)].reverse().find((r) => r.status !== 'UNRESOLVED')?.status;
   if (!statedStatus) return fail(state, 'NOT_IN_CONFLICT');
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyExtraction, clearHeld, confirmObservation, correctObservation, createConsultation, current, gaps, history,
+  annotateObservation, applyExtraction, clearHeld, confirmObservation, correctObservation, createConsultation, current, gaps, history,
   knownRefs, mergeAttributes, rejectObservation, resolveConflict, visibleObservations, type ConsultationState,
 } from './context-store.js';
 import { Attributes, ExtractResponse, Observation, ObservationRef } from '../contracts/schema.js';
@@ -293,5 +293,137 @@ describe('held, rejected and unsupported output', () => {
     const o = visibleObservations(s)[0]!;
     expect(o).toMatchObject({ symptom: 'FEVER', status: 'ABSENT' });
     expect(o.attributes).toEqual(emptyAttrs());
+  });
+});
+
+describe('approved refinements', () => {
+  // ---------------------------------------------------------------- 1. "last two days" is two days
+  it('keeps "the last two days" as a two-day duration without adding "about"', () => {
+    const obs = visibleObservations(synthetic());
+    const fever = obs.find((o) => o.symptom === 'FEVER')!;
+    expect(fever.attributes.duration).toEqual({ value: 2, unit: 'DAYS', approximate: false, text: 'the last two days' });
+    expect(fever.evidence.map((e) => e.quote.toLowerCase()).join(' ')).not.toContain('about');
+    const cough = obs.find((o) => o.symptom === 'COUGH')!;
+    expect(cough.attributes.duration!.approximate).toBe(true); // the patient said "about five days"
+    const single = applyExtraction(createConsultation('c'), scenarioResponse('last-two-days'), AT);
+    expect(visibleObservations(single)[0]!.attributes.duration).toMatchObject({ value: 2, approximate: false });
+  });
+
+  // ---------------------------------------------------------------- 2. dose content
+  it('keeps an independently supported symptom and drops the dose from the evidence', () => {
+    const s = applyExtraction(createConsultation('c'), scenarioResponse('dose-in-quote'), AT);
+    const [o] = visibleObservations(s);
+    expect(o).toMatchObject({ symptom: 'FEVER', status: 'PRESENT' });
+    expect(o!.evidence.map((e) => e.quote)).toEqual(['I have a fever']);
+  });
+
+  it('never stores dose text anywhere, and dose-only evidence stores nothing', () => {
+    const dose = /\b\d+\s?(mg|mcg|ml)\b|tablet|paracetamol|dose/i;
+    for (const name of ['dose-in-quote', 'dose-text', 'dose-only-evidence']) {
+      const s = applyExtraction(createConsultation('c'), scenarioResponse(name), AT);
+      for (const id of s.order) for (const rev of history(s, id)) {
+        expect(JSON.stringify([rev.label, rev.evidence.map((e) => e.quote), rev.attributes.duration?.text]), name).not.toMatch(dose);
+      }
+    }
+    expect(visibleObservations(applyExtraction(createConsultation('c'), scenarioResponse('dose-only-evidence'), AT))).toEqual([]);
+  });
+
+  // ---------------------------------------------------------------- 3. patient-stated conditions
+  describe('patient-stated conditions', () => {
+    const belief = () => {
+      const s = applyExtraction(createConsultation('c'), scenarioResponse('patient-belief'), AT);
+      return { s, id: visibleObservations(s)[0]!.id };
+    };
+
+    it('can be annotated without changing status, source or attributes, and the original stays in history', () => {
+      const { s, id } = belief();
+      const { state, error } = annotateObservation(s, id, 'Not supported by findings so far', LATER);
+      expect(error).toBeNull();
+      const now = current(state, id)!;
+      expect(now).toMatchObject({ status: 'UNRESOLVED', source: 'PATIENT_REPORTED', kind: 'PATIENT_STATED_CONDITION', revision: 2 });
+      expect(now.review.note).toBe('Not supported by findings so far');
+      expect(history(state, id)[0]!.review.note).toBeNull();
+      expect(lastEvent(state).type).toBe('DOCTOR_ANNOTATED');
+      assertEveryRevisionIsValid(state);
+    });
+
+    it('can never be promoted: not confirmed, not corrected, even after annotation', () => {
+      const { s, id } = belief();
+      const annotated = annotateObservation(s, id, 'Doctor note', LATER).state;
+      expect(confirmObservation(annotated, id, LATER).error).toBe('CONDITION_NOT_CONFIRMABLE');
+      expect(correctObservation(annotated, id, { status: 'PRESENT' }, LATER).error).toBe('CONDITION_NOT_CONFIRMABLE');
+      expect(visibleObservations(annotated).some((o) => o.source === 'DOCTOR_CONFIRMED')).toBe(false);
+    });
+
+    it('can be dismissed, and dismissal keeps the history', () => {
+      const { s, id } = belief();
+      const dismissed = rejectObservation(s, id, LATER, 'Dismissed by doctor').state;
+      expect(visibleObservations(dismissed)).toEqual([]);
+      expect(current(dismissed, id)!.review).toMatchObject({ state: 'REJECTED', note: 'Dismissed by doctor' });
+      expect(history(dismissed, id)).toHaveLength(2);
+    });
+
+    it('rejects empty or oversized notes and does not add a revision for an unchanged note', () => {
+      const { s, id } = belief();
+      expect(annotateObservation(s, id, '   ', LATER).error).toBe('INVALID_PATCH');
+      expect(annotateObservation(s, id, 'x'.repeat(201), LATER).error).toBe('INVALID_PATCH');
+      const once = annotateObservation(s, id, 'same', LATER).state;
+      expect(annotateObservation(once, id, 'same', LATER).state).toBe(once);
+    });
+  });
+
+  // ---------------------------------------------------------------- 4. held, then speaker assignment and re-extraction
+  it('holds an unattributed claim, then accepts it after speaker assignment and re-extraction', () => {
+    let s = applyExtraction(createConsultation('c'), scenarioResponse('unattributed-held'), AT);
+    expect(visibleObservations(s)).toEqual([]);
+    expect(s.held).toHaveLength(1);
+    const heldQuote = s.held[0]!.evidence[0]!.quote;
+    s = applyExtraction(s, scenarioResponse('unattributed-reassigned'), LATER);
+    expect(visibleObservations(s).map((o) => [o.symptom, o.source, o.evidence[0]!.quote])).toEqual([['CHEST_PAIN', 'PATIENT_REPORTED', heldQuote]]);
+    s = clearHeld(s, 'u11', LATER);
+    expect(s.held).toEqual([]);
+    expect(visibleObservations(s)).toHaveLength(1);
+  });
+
+  // ---------------------------------------------------------------- 5. UNKNOWN is revised, not duplicated
+  describe('a definite statement after UNKNOWN', () => {
+    const withUnknown = () => seeded('obs_known_unk', 'FEVER', 'UNKNOWN');
+
+    it('revises the active observation in place and preserves history', () => {
+      const s = applyExtraction(withUnknown(), scenarioResponse('unknown-then-definite'), LATER);
+      expect(visibleObservations(s)).toHaveLength(1); // not duplicated
+      const now = current(s, 'obs_known_unk')!;
+      expect(now).toMatchObject({ status: 'PRESENT', revision: 2, source: 'PATIENT_REPORTED' });
+      expect(now.attributes.duration).toMatchObject({ value: 2, unit: 'DAYS' });
+      expect(now.evidence).toHaveLength(2);
+      expect(history(s, 'obs_known_unk').map((r) => r.status)).toEqual(['UNKNOWN', 'PRESENT']);
+      assertEveryRevisionIsValid(s);
+    });
+
+    it('can revise to ABSENT', () => {
+      const s = applyExtraction(withUnknown(), scenarioResponse('unknown-then-absent'), LATER);
+      expect(current(s, 'obs_known_unk')).toMatchObject({ status: 'ABSENT', revision: 2 });
+    });
+
+    it('never merges observations from different sources', () => {
+      const s = applyExtraction(seeded('obs_known_unk', 'WHEEZE', 'UNKNOWN'), scenarioResponse('unknown-different-source'), LATER);
+      expect(visibleObservations(s).map((o) => [o.symptom, o.status, o.source])).toEqual([['WHEEZE', 'UNKNOWN', 'PATIENT_REPORTED'], ['WHEEZE', 'PRESENT', 'DOCTOR_OBSERVED']]);
+    });
+
+    it('is idempotent and ignores a revision aimed at an observation that is not UNKNOWN', () => {
+      const s = applyExtraction(withUnknown(), scenarioResponse('unknown-then-definite'), LATER);
+      expect(applyExtraction(s, scenarioResponse('unknown-then-definite'), LATER)).toBe(s);
+      const present = applyExtraction(seeded('obs_known_unk', 'FEVER', 'PRESENT'), scenarioResponse('unknown-then-definite'), LATER);
+      expect(current(present, 'obs_known_unk')).toMatchObject({ status: 'PRESENT', revision: 1 });
+      expect((lastEvent(present).detail as any).notes).toContain('REVISE_TARGET_NOT_UNKNOWN');
+    });
+  });
+
+  // ---------------------------------------------------------------- doctor confirmation is never inferred
+  it('does not turn a doctor utterance into a confirmation', () => {
+    for (const name of ['doctor-observed', 'unknown-different-source', 'model-emits-confirmed']) {
+      const s = applyExtraction(createConsultation('c'), scenarioResponse(name), AT);
+      expect(visibleObservations(s).some((o) => o.source === 'DOCTOR_CONFIRMED'), name).toBe(false);
+    }
   });
 });

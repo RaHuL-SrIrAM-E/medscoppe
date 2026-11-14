@@ -20,8 +20,8 @@ const stem = (p: string) => p.split('/').pop()!;
 
 describe('shared contract fixtures validate against the Zod contracts', () => {
   it('found the fixtures', () => {
-    expect(scenarioInputs.length).toBeGreaterThanOrEqual(13);
-    expect(responses.length).toBeGreaterThanOrEqual(16);
+    expect(scenarioInputs.length).toBeGreaterThanOrEqual(20);
+    expect(responses.length).toBeGreaterThanOrEqual(23);
   });
 
   it.each(scenarioInputs)('scenario input %s', (path, doc) => {
@@ -95,6 +95,9 @@ describe('invalid input is rejected', () => {
     { action: 'ADD' },
     { action: 'REINFORCE', target_id: 'o1' },
     { action: 'CONTRADICT', target_id: 'o1' },
+    { action: 'REVISE', target_id: 'o1', new_status: 'UNKNOWN' },
+    { action: 'REVISE', target_id: 'o1', new_status: 'PRESENT' },
+    { action: 'REINFORCE', target_id: 'o1', new_status: 'PRESENT' },
   ])('a proposal whose shape does not match its action %j', (p) => {
     expect(Proposal.safeParse(p).success).toBe(false);
   });
