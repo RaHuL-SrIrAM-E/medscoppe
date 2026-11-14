@@ -16,7 +16,8 @@ import https from 'node:https';
 import path from 'node:path';
 
 const OUT = process.env.OUT_DIR ?? 'artifacts/production';
-const URL = process.env.PROD_URL ?? 'https://127.0.0.1:4173/';
+// ?consultBackend=off keeps the consultation on its labelled offline replay, so the page makes no request to a backend that is not running here.
+const URL = process.env.PROD_URL ?? 'https://127.0.0.1:4173/?consultBackend=off';
 fs.mkdirSync(OUT, { recursive: true });
 
 // --- preview server -------------------------------------------------------------------------
@@ -104,6 +105,30 @@ const less = await shot('less', click(302, 376));
 check('Less collapses the expanded card back to its compact size', near(less.card, lobe.card), `${more.card} -> ${less.card} px`);
 const again = await shot('details-again', click(295, 336));
 check('Details restores the expanded card', near(again.card, more.card), `${less.card} -> ${again.card} px`);
+
+// 4. Scripted consultation (offline recorded replay): Start, beads arrive from the session, a bead opens the card.
+// Pixel-based like the rest: the bead column and the card area are empty until the session produces something.
+const BEADS = [800, 100, 230, 320];
+const CARD_AREA = [930, 60, 350, 300];
+const beforeBeads = await shot('consult-ready');
+const emptyBeads = await lit(await page.screenshot(), BEADS);
+const startedAt = Date.now();
+await page.mouse.click(105, 745); // Start
+await page.waitForTimeout(8000);
+const midBeads = await lit(await page.screenshot({ path: path.join(OUT, '10-consult-listening.png') }), BEADS);
+check('before Start the bead column is empty (nothing pre-populated)', emptyBeads < 300, `${emptyBeads} px`);
+check('mid-replay, before the first answer is extracted, there are still no beads', midBeads < 300, `${midBeads} px`);
+await page.waitForTimeout(Math.max(0, 40000 - (Date.now() - startedAt)));
+const doneShot = await page.screenshot({ path: path.join(OUT, '11-consult-complete.png') });
+const doneBeads = await lit(doneShot, BEADS);
+check('after the replay the beads have arrived from the session', doneBeads > emptyBeads + 1500, `${emptyBeads} -> ${doneBeads} px`);
+const noCard = await lit(doneShot, CARD_AREA);
+await page.mouse.click(833, 232); // the Cough bead
+await page.waitForTimeout(2500);
+const cardShot = await page.screenshot({ path: path.join(OUT, '12-consult-card.png') });
+const withCard = await lit(cardShot, CARD_AREA);
+check('selecting a bead opens the observation card', withCard > noCard + 2500, `${noCard} -> ${withCard} px`);
+check('no console errors during the consultation', problems.length === 0, problems[0]);
 
 fs.writeFileSync(path.join(OUT, 'problems.json'), JSON.stringify(problems, null, 1));
 await browser.close();

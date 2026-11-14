@@ -245,3 +245,20 @@ Code: `app/src/consult/{core,session,transcription,extraction,testing,demo}`. No
 **Replay status**: the banner always carries the input label and the extraction mode (`REPLAY_FIXTURE`, `LIVE_MODEL`, `MIXED`, or not contacted). Replay is sticky: a single replayed response is never reported as live.
 
 **Demo**: `cd app && npm run demo:consultation -- --speed=25 [--pause-demo] [--backend=http://127.0.0.1:8000]`. Without `--backend` it uses offline recorded fixtures. Backend integration test: `MEDSCOPE_BACKEND_URL=... npx vitest run src/consult/session/session.integration.test.ts`.
+
+## 17. Milestone 5: scripted consultation in the spatial app (implemented)
+
+No microphone, Web Speech, TTS or wake-word code. The scripted provider drives the real session, extraction client and append-only store.
+
+**Integration points**
+- `core/intents.ts`: new intents `RESUME_LISTENING`, `END_CONSULTATION`, `RETRY_EXTRACTION`, `SELECT_OBSERVATION`, `CLEAR_OBSERVATION_SELECTION`, `CONFIRM_OBSERVATION`, `REJECT_OBSERVATION`, `RESOLVE_CONFLICT` (alongside the existing `START_CONSULTATION`, `PAUSE_LISTENING`). The anatomy reducer ignores them.
+- `consult/app/consult-app.ts` (`ConsultApp`, pure, tested on virtual time): handles those intents, owns one `ConsultationSession` per run (an ended session is terminal, so each run is a fresh session and store), owns the UI-only selection, and derives everything the spatial layer paints. It contains no consultation logic.
+- `consult/app/consult-runtime.ts`: real timers, the synthetic transcript, backend when reachable (`/health` probe, 2 s) otherwise the labelled offline recorded replay. Optional URL parameters `?consultSpeed=N` and `?consultBackend=off`. No credentials.
+- `consult/ui/consult-view-model.ts`: pure view models (controls, beads, card, review actions).
+- `spatial-ui/consult-controls-system.ts`, `observation-beads-system.ts`, `observation-card-system.ts` plus `public/ui/consult-controls.uikitml`, `observation-card.uikitml` and two scene nodes. `src/index.ts` registers the systems.
+
+**Rules enforced in `ConsultApp`**: `CONFIRM_OBSERVATION`, `REJECT_OBSERVATION` and `RESOLVE_CONFLICT` are accepted only from `hand` or `desktop` sources (a deliberate press), never `voice` or `script`. A press while a session is running or starting never creates a second session. Opening an observation card clears the anatomy selection and vice versa, so only one contextual card is open. When the script is exhausted and extraction has drained, the run ends itself as COMPLETE.
+
+**Bead language**: shape says presence (filled sphere present, ring absent, small sphere plus ring unclear, pulsing orange ring conflict, diamond the patient's own statement), colour says origin (blue patient-reported, gold doctor-observed, mint doctor-confirmed with a halo). Chest-associated symptoms have a thin leader to one shared chest hub, an orientation aid only; systemic ones (fever) float above with no line.
+
+**Known display limitation**: the UI font has no em dash (the console reports a missing glyph), so the two mandatory labels are painted with " - " instead of the specified em dash. The logical strings, tests and logs keep the em dash.

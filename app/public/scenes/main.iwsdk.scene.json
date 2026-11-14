@@ -183,6 +183,49 @@
       "components": {
         "RayInteractable": {}
       }
+    },
+    {
+      "id": "consult-controls",
+      "name": "Consult Controls",
+      "content": {
+        "type": "asset",
+        "asset": "consult-controls"
+      },
+      "transform": {
+        "position": [
+          -0.53,
+          1.04,
+          -0.76
+        ],
+        "rotationDeg": [
+          -32,
+          16,
+          0
+        ],
+        "scale": 1
+      },
+      "components": {
+        "RayInteractable": {}
+      }
+    },
+    {
+      "id": "observation-card",
+      "name": "Observation Card",
+      "content": {
+        "type": "asset",
+        "asset": "observation-card"
+      },
+      "transform": {
+        "position": [
+          0,
+          -10,
+          -1
+        ],
+        "scale": 1
+      },
+      "components": {
+        "RayInteractable": {}
+      }
     }
   ]
 }

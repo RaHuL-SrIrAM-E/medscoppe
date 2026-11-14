@@ -20,7 +20,20 @@ export type Intent =
   | { type: 'RESET_VIEW' }
   | { type: 'ROTATE_MODEL'; phase: 'start' | 'end'; yawDegrees?: number }
   | { type: 'START_CONSULTATION' }
-  | { type: 'PAUSE_LISTENING' };
+  | { type: 'PAUSE_LISTENING' }
+  | { type: 'RESUME_LISTENING' }
+  | { type: 'END_CONSULTATION' }
+  | { type: 'RETRY_EXTRACTION' }
+  | { type: 'SELECT_OBSERVATION'; observationId: string }
+  | { type: 'CLEAR_OBSERVATION_SELECTION' }
+  /** Explicit doctor review actions. Only a hand or desktop control press may carry these; see ConsultApp. */
+  | { type: 'CONFIRM_OBSERVATION'; observationId: string }
+  | { type: 'REJECT_OBSERVATION'; observationId: string }
+  | { type: 'RESOLVE_CONFLICT'; observationId: string }
+  | { type: 'CORRECT_OBSERVATION'; observationId: string; status?: 'PRESENT' | 'ABSENT'; severity?: 'MILD' | 'MODERATE' | 'SEVERE' }
+  | { type: 'ANNOTATE_OBSERVATION'; observationId: string; note: string }
+  /** UI-only: which review option row the card shows. Changes no observation. */
+  | { type: 'SET_REVIEW_PANEL'; panel: 'CORRECT' | 'NOTE' | null };
 
 export type IntentEnvelope = { intent: Intent; source: IntentSource };
 export type IntentListener = (envelope: IntentEnvelope) => void;

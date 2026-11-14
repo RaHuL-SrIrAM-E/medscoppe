@@ -21,4 +21,6 @@ export default defineAssets({
   'floor-rings': createFloorRings(),
   'layer-dock': uikitml('layer-dock.uikitml', 'Layer dock'),
   'info-card': uikitml('info-card.uikitml', 'Structure info card'),
+  'consult-controls': uikitml('consult-controls.uikitml', 'Consultation controls'),
+  'observation-card': uikitml('observation-card.uikitml', 'Observation card'),
 });

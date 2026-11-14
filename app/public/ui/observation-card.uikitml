@@ -1,0 +1,59 @@
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1;
+    width: 40;
+    padding-left: 2.4;
+    padding-right: 2.4;
+    padding-top: 2.2;
+    padding-bottom: 2.2;
+    background-color: #0e1622;
+    border-color: #8ab4ff;
+    border-width: 0.25;
+    border-radius: 4;
+  }
+  .title { font-size: 3.2; font-weight: 700; color: #f2f7fc; }
+  .presence { font-size: 2.1; font-weight: 600; color: #cfe3f5; }
+  .source { font-size: 2; color: #8ab4ff; }
+  .confirm { font-size: 1.9; font-weight: 600; color: #ffb454; }
+  .duration { font-size: 2; color: #dbe8f5; }
+  .evidence-label { font-size: 1.7; color: #9db3c9; margin-top: 0.6; }
+  .evidence { font-size: 2.1; color: #f2f7fc; }
+  .placement { font-size: 1.6; color: #9db3c9; }
+  .notice { font-size: 1.9; font-weight: 600; color: #ffb454; }
+  .row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 1.2; margin-top: 0.8; }
+  .btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-width: 15;
+    height: 7;
+    padding-left: 2.2;
+    padding-right: 2.2;
+    background-color: #142033;
+    border-color: #2a3b52;
+    border-width: 0.2;
+    border-radius: 3.5;
+    cursor: pointer;
+  }
+  .btn-label { font-size: 2.4; font-weight: 700; color: #cfe3f5; }
+</style>
+<div class="card" id="card">
+  <span class="title" id="title">Observation</span>
+  <span class="presence" id="presence">Reported present</span>
+  <span class="source" id="source">Source: patient-reported</span>
+  <span class="confirm" id="confirm">Not confirmed by a doctor</span>
+  <span class="duration" id="duration">Duration</span>
+  <span class="evidence-label" id="evidence-label">Patient said</span>
+  <span class="evidence" id="evidence">"quote"</span>
+  <span class="placement" id="placement">Placement note</span>
+  <span class="notice" id="notice">Notice</span>
+  <div class="row" id="row">
+    <button class="btn" id="obs-btn-confirm"><span class="btn-label" id="obs-btn-confirm-label">Confirm</span></button>
+    <button class="btn" id="obs-btn-resolve"><span class="btn-label" id="obs-btn-resolve-label">Keep this</span></button>
+    <button class="btn" id="obs-btn-reject"><span class="btn-label" id="obs-btn-reject-label">Dismiss</span></button>
+    <button class="btn" id="obs-btn-close"><span class="btn-label" id="obs-btn-close-label">Close</span></button>
+  </div>
+</div>
