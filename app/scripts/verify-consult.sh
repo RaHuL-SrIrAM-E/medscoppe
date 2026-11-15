@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Hands-only consultation check (IWER emulation, controllers disconnected). Every action is a hand-ray pinch:
 # start -> pause -> resume -> scripted replay completes -> select a bead -> explicit confirm -> close -> new session -> end.
-# Requires a running dev server (`npx @iwsdk/cli dev up --headless`) and, for the backend path, the API on :8000
-# (`cd ../backend && .venv/bin/uvicorn app.main:app --port 8000`). Without the API the offline replay is used and labelled.
+# Requires a running dev server (`npx @iwsdk/cli dev up --headless`).
+# MODE is explicit, never silently defaulted:
+#   MODE=offline (default)  no backend configured: the app makes no request and runs the labelled offline replay.
+#   MODE=backend            needs the API on :8000 AND the dev server started with VITE_API_BASE_URL=http://localhost:8000
+#                           (`VITE_API_BASE_URL=http://localhost:8000 npx @iwsdk/cli dev up --headless`); the script
+#                           then FAILS unless the session reports the backend as its source.
 # The scripted consultation runs in real time (about 30 s). Exits non-zero on failure.
 set -u
+MODE=${MODE:-offline}
 cd "$(dirname "$0")/.."
 J() { npx @iwsdk/cli "$@" 2>&1; }
 fail=0
@@ -42,6 +47,8 @@ t=$(now); pinch_at consult-btn-primary
 logs $t intent | grep -q 'START_CONSULTATION","source":"hand\|START_CONSULTATION"},"source":"hand' && ok=1 || ok=0; check "pinch Start emits START_CONSULTATION from the hand" $ok
 wait_for $t '"life":"LISTENING"' 12 && ok=1 || ok=0; check "session reaches LISTENING" $ok
 last $t | grep -q 'RECORDED REPLAY' && ok=1 || ok=0; check "extraction is labelled RECORDED REPLAY while running" $ok
+if [ "$MODE" = backend ]; then want=BACKEND; else want=OFFLINE_FIXTURE; fi
+last $t | grep -q "\"src\":\"$want\"" && ok=1 || ok=0; check "extraction source is $want (MODE=$MODE)" $ok
 
 # 2. pause and resume by hand
 sleep 3
@@ -68,6 +75,10 @@ logs $t consult | grep -q DOCTOR_CONFIRMED && ok=0 || ok=1; check "opening the c
 t=$(now); pinch_at obs-btn-confirm
 logs $t intent | grep -q 'CONFIRM_OBSERVATION' && ok=1 || ok=0; check "pinch Confirm emits CONFIRM_OBSERVATION" $ok
 last $t | grep -q '"origins":\["DOCTOR_CONFIRMED","PATIENT","PATIENT","PATIENT"\]' && ok=1 || ok=0; check "exactly the chosen observation becomes DOCTOR_CONFIRMED" $ok
+t=$(now); pinch_at obs-btn-correct; pinch_at obs-opt-0
+logs $t intent | grep -q 'CORRECT_OBSERVATION' && ok=1 || ok=0; check "pinch Correct then Mark absent emits CORRECT_OBSERVATION" $ok
+t=$(now); pinch_at obs-btn-note; pinch_at obs-opt-0
+logs $t intent | grep -q 'ANNOTATE_OBSERVATION' && ok=1 || ok=0; check "pinch Note then a preset emits ANNOTATE_OBSERVATION" $ok
 t=$(now); pinch_at obs-btn-close
 last $t | grep -q '"sel":null' && ok=1 || ok=0; check "pinch Close dismisses the card" $ok
 

@@ -262,3 +262,21 @@ No microphone, Web Speech, TTS or wake-word code. The scripted provider drives t
 **Bead language**: shape says presence (filled sphere present, ring absent, small sphere plus ring unclear, pulsing orange ring conflict, diamond the patient's own statement), colour says origin (blue patient-reported, gold doctor-observed, mint doctor-confirmed with a halo). Chest-associated symptoms have a thin leader to one shared chest hub, an orientation aid only; systemic ones (fever) float above with no line.
 
 **Known display limitation**: the UI font has no em dash (the console reports a missing glyph), so the two mandatory labels are painted with " - " instead of the specified em dash. The logical strings, tests and logs keep the em dash.
+
+## 18. Competition-readiness pass (implemented)
+
+**Review actions on the observation card** (all through the append-only store; the UI holds no review rules, `ConsultApp` and the store decide):
+- **Correct** opens a short option row: Mark present / Mark absent and Severity Mild / Moderate / Severe. It emits `CORRECT_OBSERVATION`, which calls `correctObservation`. The result is a new revision with `review.state = CORRECTED` and `source = DOCTOR_CONFIRMED` (an explicit doctor action). Earlier revisions and the original evidence quote stay in the store; the card says "Revision n. Earlier revisions and the original quote are kept."
+- **Note** opens three preset notes (Needs follow-up, Patient unsure, Clarified with patient). It emits `ANNOTATE_OBSERVATION`, which calls `annotateObservation`. A note changes neither status, source nor evidence and is never a confirmation. There is deliberately no free-text entry.
+- A patient-stated condition offers no Correct, no Confirm and no Keep this; it can only be annotated or dismissed. It is never promoted to a diagnosis.
+- Confirm, Dismiss, Keep this, Correct and Note are accepted only from `hand` or `desktop` sources (a deliberate press); `voice` and `script` are refused. While an option row is open the card shrinks to the title, the choices and Back.
+
+**Caption**: one line, at most 60 characters including the speaker, showing the live partial and then the end of the finished utterance. It holds 1.5 s, dims, and clears at 3.2 s (`CAPTION_FADE_AFTER_MS`, `CAPTION_CLEAR_AFTER_MS`). It is not a transcript: only one line exists at a time.
+
+**Backend probing is opt-in.** With no backend configured the app makes no network request and runs the offline recorded replay, labelled "Offline recorded replay. No backend configured." To use a backend: set `VITE_API_BASE_URL`, or pass `?consultBackend=on` (http://localhost:8000) or `?consultBackend=<url>`; `?consultBackend=off` forces offline. A configured backend that does not answer falls back to the offline replay, labelled "Backend unreachable: using the offline recorded replay." (the browser logs the failed request itself; that cannot be suppressed from script).
+
+**URL parameters** (non-secret): `consultSpeed=N` (script speed), `consultFixture=failure|conflict` (controlled test scenarios; never contact a backend; the controls say "TEST FIXTURE: <name>"; the failure fixture fails the first extraction permanently so Retry can be exercised, the conflict fixture adds a patient line contradicting the cough), `consultDebug=1` (exposes a read-only state summary, used by `verify:consult-states`).
+
+**Verification scripts**: `verify:consult` (hands, MODE=offline|backend, explicit), `verify:consult-states` (real mouse path in the production build: normal run, correction, annotation, confirmation, dismissal, new session, failure and retry, conflict and resolution; 38 checks), `verify:production` (pinned to `?consultBackend=off`).
+
+**Not available yet**: assigning a speaker to unattributed speech has no UI. `ConsultationSession.assignSpeaker` and the re-extraction path exist and are unit-tested, but the scripted consultation never produces unattributed speech and a speaker picker was out of scope. Free-text correction (duration wording, onset) and free-text notes are also not offered.

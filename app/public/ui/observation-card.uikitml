@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.1;
-    width: 40;
+    width: 34;
     padding-left: 2.4;
     padding-right: 2.4;
     padding-top: 2.2;
@@ -28,17 +28,18 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    min-width: 15;
+    min-width: 12;
     height: 7;
-    padding-left: 2.2;
-    padding-right: 2.2;
+    padding-left: 1.4;
+    padding-right: 1.4;
     background-color: #142033;
     border-color: #2a3b52;
     border-width: 0.2;
     border-radius: 3.5;
     cursor: pointer;
   }
-  .btn-label { font-size: 2.4; font-weight: 700; color: #cfe3f5; }
+  .opt { min-width: 14; }
+  .btn-label { font-size: 2.2; font-weight: 700; color: #cfe3f5; }
 </style>
 <div class="card" id="card">
   <span class="title" id="title">Observation</span>
@@ -46,14 +47,26 @@
   <span class="source" id="source">Source: patient-reported</span>
   <span class="confirm" id="confirm">Not confirmed by a doctor</span>
   <span class="duration" id="duration">Duration</span>
+  <span class="duration" id="severity">Severity</span>
   <span class="evidence-label" id="evidence-label">Patient said</span>
   <span class="evidence" id="evidence">"quote"</span>
   <span class="placement" id="placement">Placement note</span>
   <span class="notice" id="notice">Notice</span>
+  <span class="placement" id="revision">Revision</span>
+  <span class="source" id="note">Note</span>
   <div class="row" id="row">
     <button class="btn" id="obs-btn-confirm"><span class="btn-label" id="obs-btn-confirm-label">Confirm</span></button>
     <button class="btn" id="obs-btn-resolve"><span class="btn-label" id="obs-btn-resolve-label">Keep this</span></button>
+    <button class="btn" id="obs-btn-correct"><span class="btn-label" id="obs-btn-correct-label">Correct</span></button>
+    <button class="btn" id="obs-btn-note"><span class="btn-label" id="obs-btn-note-label">Note</span></button>
     <button class="btn" id="obs-btn-reject"><span class="btn-label" id="obs-btn-reject-label">Dismiss</span></button>
     <button class="btn" id="obs-btn-close"><span class="btn-label" id="obs-btn-close-label">Close</span></button>
+  </div>
+  <div class="row" id="optrow">
+    <button class="btn opt" id="obs-opt-0"><span class="btn-label" id="obs-opt-0-label">Option</span></button>
+    <button class="btn opt" id="obs-opt-1"><span class="btn-label" id="obs-opt-1-label">Option</span></button>
+    <button class="btn opt" id="obs-opt-2"><span class="btn-label" id="obs-opt-2-label">Option</span></button>
+    <button class="btn opt" id="obs-opt-3"><span class="btn-label" id="obs-opt-3-label">Option</span></button>
+    <button class="btn opt" id="obs-opt-4"><span class="btn-label" id="obs-opt-4-label">Option</span></button>
   </div>
 </div>

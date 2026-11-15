@@ -6,10 +6,13 @@ import { consultApp } from '../consult/app/consult-singleton.js';
 import type { CardModel } from '../consult/ui/consult-view-model.js';
 import { intentBus, type IntentSource } from '../core/intents.js';
 import { motion } from '../design/tokens.js';
-import { beadWorldPosition } from './observation-beads-system.js';
+import { beadLabelReach, beadWorldPosition } from './observation-beads-system.js';
 
 const HIDDEN_Y = -10;
-const CARD_OFFSET = 0.45; // metres to the viewer-right of the selected bead
+const OPTION_SLOTS = 5;
+const CARD_HALF_WIDTH = 0.17;
+const MAX_LABEL_CLEARANCE = 0.3; // a very long label may overlap the card edge slightly rather than push the card out of view
+const CARD_GAP = 0.04;
 const BORDER: Record<CardModel['origin'], string> = { PATIENT: '#8ab4ff', DOCTOR_OBSERVED: '#f2c14e', DOCTOR_CONFIRMED: '#7cf2d4' };
 const SOURCE_COLOUR = BORDER;
 
@@ -62,10 +65,10 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private tryBind(): void {
     const panel = this.world.getSceneObject<UIKitMLAsset>('observation-card');
     if (!panel) return;
-    for (const id of ['title', 'presence', 'source', 'confirm', 'duration', 'evidence-label', 'evidence', 'placement', 'notice']) {
+    for (const id of ['obs-btn-close-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice']) {
       this.els[id] = panel.getElementById<UIKit.Text>(id);
     }
-    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close']) this.buttons[id] = panel.getElementById(id);
+    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note']) this.buttons[id] = panel.getElementById(id);
     const wire = (id: string, handler: () => void): void => {
       const el = this.buttons[id];
       if (!el) return;
@@ -76,7 +79,19 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     wire('obs-btn-confirm', () => { const id = current(); if (id) intentBus.emit({ type: 'CONFIRM_OBSERVATION', observationId: id }, this.source()); });
     wire('obs-btn-resolve', () => { const id = current(); if (id) intentBus.emit({ type: 'RESOLVE_CONFLICT', observationId: id }, this.source()); });
     wire('obs-btn-reject', () => { const id = current(); if (id) intentBus.emit({ type: 'REJECT_OBSERVATION', observationId: id }, this.source()); });
-    wire('obs-btn-close', () => intentBus.emit({ type: 'CLEAR_OBSERVATION_SELECTION' }, this.source()));
+    wire('obs-btn-correct', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'CORRECT' }, this.source()));
+    wire('obs-btn-note', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'NOTE' }, this.source()));
+    wire('obs-btn-close', () => {
+      // while a review row is open this is "Back": it closes the row; otherwise it closes the card
+      const open = consultApp.getSnapshot().card?.panel;
+      intentBus.emit(open ? { type: 'SET_REVIEW_PANEL', panel: open } : { type: 'CLEAR_OBSERVATION_SELECTION' }, this.source());
+    });
+    for (let i = 0; i < OPTION_SLOTS; i++) {
+      this.buttons[`obs-opt-${i}`] = panel.getElementById(`obs-opt-${i}`);
+      this.els[`obs-opt-${i}-label`] = panel.getElementById<UIKit.Text>(`obs-opt-${i}-label`);
+      // the intent comes from the card model (ConsultApp decides what each option does); the UI holds no review rules
+      wire(`obs-opt-${i}`, () => { const o = consultApp.getSnapshot().card?.options[i]; if (o) intentBus.emit(o.intent, this.source()); });
+    }
     this.panel = panel;
     panel.position.set(0, HIDDEN_Y, 0);
   }
@@ -84,18 +99,32 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private paint(card: CardModel): void {
     const set = (id: string, props: Record<string, unknown>): void => this.els[id]?.setProperties(props);
     const row = (text: string | null) => ({ text: text ?? '', display: text ? 'flex' : 'none' });
+    const choosing = card.panel !== null;
+    // while a review row is open the card shrinks to the title, the choices and Back: the evidence stays one press away
+    const hide = { display: 'none' };
     set('title', { text: card.title });
-    set('presence', { text: card.presenceLine });
-    set('source', { text: card.sourceLine, color: SOURCE_COLOUR[card.origin] });
-    set('confirm', { text: card.confirmLine, color: card.confirmed ? '#7cf2d4' : '#ffb454' });
-    set('duration', row(card.durationLine));
-    set('evidence-label', { text: card.evidenceLabel });
-    set('evidence', { text: card.evidenceQuote });
-    set('placement', { text: card.placementNote });
-    set('notice', row(card.notice));
-    this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm ? 'flex' : 'none' });
-    this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve ? 'flex' : 'none' });
-    this.buttons['obs-btn-reject']?.setProperties({ display: card.actions.reject ? 'flex' : 'none' });
+    set('presence', { text: choosing ? (card.panel === 'CORRECT' ? 'Correct: choose one' : 'Add a short note: choose one') : card.presenceLine });
+    set('source', choosing ? hide : { text: card.sourceLine, color: SOURCE_COLOUR[card.origin], display: 'flex' });
+    set('confirm', choosing ? hide : { text: card.confirmLine, color: card.confirmed ? '#7cf2d4' : '#ffb454', display: 'flex' });
+    set('duration', choosing ? hide : row(card.durationLine));
+    set('severity', choosing ? hide : row(card.severityLine));
+    set('revision', choosing ? hide : row(card.revisionLine));
+    set('note', choosing ? hide : row(card.noteLine));
+    set('evidence-label', choosing ? hide : { text: card.evidenceLabel, display: 'flex' });
+    set('evidence', choosing ? hide : { text: card.evidenceQuote, display: 'flex' });
+    set('placement', choosing ? hide : { text: card.placementNote, display: 'flex' });
+    set('notice', choosing ? hide : row(card.notice));
+    set('obs-btn-close-label', { text: choosing ? 'Back' : 'Close' });
+    this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-reject']?.setProperties({ display: card.actions.reject && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-correct']?.setProperties({ display: card.actions.correct && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-note']?.setProperties({ display: card.actions.annotate && !choosing ? 'flex' : 'none' });
+    for (let i = 0; i < OPTION_SLOTS; i++) {
+      const opt = card.options[i];
+      this.buttons[`obs-opt-${i}`]?.setProperties({ display: opt ? 'flex' : 'none' });
+      if (opt) this.els[`obs-opt-${i}-label`]?.setProperties({ text: opt.label });
+    }
     this.panel?.getElementById('card')?.setProperties({ borderColor: BORDER[card.origin] });
   }
 
@@ -124,7 +153,8 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     this.player.head.getWorldPosition(this.head);
     this.forward.set(this.axis.x - this.head.x, 0, this.axis.z - this.head.z).normalize();
     this.right.set(-this.forward.z, 0, this.forward.x);
-    this.target.copy(beadPos).addScaledVector(this.right, CARD_OFFSET).addScaledVector(this.forward, -0.04);
+    this.target.copy(beadPos).addScaledVector(this.right, Math.min(beadLabelReach(card.observationId) * 1.12, MAX_LABEL_CLEARANCE) + CARD_GAP + CARD_HALF_WIDTH).addScaledVector(this.forward, -0.04);
+    this.target.y -= 0.12; // sit a little below the bead so a tall card stays inside the view
 
     const k = 1 - Math.exp(-motion.smoothing * delta);
     if (this.shownFor !== card.observationId && this.panel.position.y < HIDDEN_Y + 1) this.panel.position.copy(this.target);
@@ -133,6 +163,7 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     this.panel.lookAt(this.head);
 
     this.edge.copy(this.panel.position).addScaledVector(this.right, -0.2);
+    this.edge.y += 0.1; // end near the title so the line does not cross the text
     const p = this.linePositions;
     p[0] = beadPos.x; p[1] = beadPos.y; p[2] = beadPos.z;
     p[3] = this.edge.x; p[4] = this.edge.y; p[5] = this.edge.z;

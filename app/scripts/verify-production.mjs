@@ -16,8 +16,9 @@ import https from 'node:https';
 import path from 'node:path';
 
 const OUT = process.env.OUT_DIR ?? 'artifacts/production';
-// ?consultBackend=off keeps the consultation on its labelled offline replay, so the page makes no request to a backend that is not running here.
-const URL = process.env.PROD_URL ?? 'https://127.0.0.1:4173/?consultBackend=off';
+// Explicit mode: ?consultBackend=off pins the consultation to its labelled offline replay (no backend request at all).
+// Override the whole URL with PROD_URL to test another mode, e.g. ?consultBackend=on&consultDebug=1.
+const URL = process.env.PROD_URL ?? 'https://127.0.0.1:4173/?consultBackend=off&consultDebug=1';
 fs.mkdirSync(OUT, { recursive: true });
 
 // --- preview server -------------------------------------------------------------------------
@@ -109,11 +110,11 @@ check('Details restores the expanded card', near(again.card, more.card), `${less
 // 4. Scripted consultation (offline recorded replay): Start, beads arrive from the session, a bead opens the card.
 // Pixel-based like the rest: the bead column and the card area are empty until the session produces something.
 const BEADS = [800, 100, 230, 320];
-const CARD_AREA = [930, 60, 350, 300];
+const CARD_AREA = [990, 60, 290, 340];
 const beforeBeads = await shot('consult-ready');
 const emptyBeads = await lit(await page.screenshot(), BEADS);
 const startedAt = Date.now();
-await page.mouse.click(105, 745); // Start
+await page.mouse.click(95, 707); // Start
 await page.waitForTimeout(8000);
 const midBeads = await lit(await page.screenshot({ path: path.join(OUT, '10-consult-listening.png') }), BEADS);
 check('before Start the bead column is empty (nothing pre-populated)', emptyBeads < 300, `${emptyBeads} px`);
@@ -123,7 +124,7 @@ const doneShot = await page.screenshot({ path: path.join(OUT, '11-consult-comple
 const doneBeads = await lit(doneShot, BEADS);
 check('after the replay the beads have arrived from the session', doneBeads > emptyBeads + 1500, `${emptyBeads} -> ${doneBeads} px`);
 const noCard = await lit(doneShot, CARD_AREA);
-await page.mouse.click(833, 232); // the Cough bead
+await page.mouse.click(817, 232); // the Cough bead
 await page.waitForTimeout(2500);
 const cardShot = await page.screenshot({ path: path.join(OUT, '12-consult-card.png') });
 const withCard = await lit(cardShot, CARD_AREA);

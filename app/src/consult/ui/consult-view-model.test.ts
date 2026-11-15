@@ -75,7 +75,7 @@ describe('card', () => {
       evidenceLabel: 'Patient said',
     });
     expect(card.evidenceQuote).toBe('"I\'ve been coughing for about five days"');
-    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false });
+    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false, correct: true, annotate: true });
   });
 
   it('a confirmed observation no longer offers Confirm and says it was an explicit action', () => {
@@ -90,7 +90,7 @@ describe('card', () => {
   it('a patient-stated condition offers no confirm and no resolve, and says it is not a diagnosis', () => {
     const s = applyExtraction(createConsultation('c'), ExtractResponse.parse(patientBelief), at);
     const card = deriveCard(s, [], visibleObservations(s)[0]!.id)!;
-    expect(card.actions).toEqual({ confirm: false, reject: true, resolve: false });
+    expect(card.actions).toEqual({ confirm: false, reject: true, resolve: false, correct: false, annotate: true });
     expect(card.notice).toMatch(/not a diagnosis/);
     expect(card.presenceLine).toBe('Mentioned by the patient');
   });

@@ -225,7 +225,7 @@ export type ExtractionSource = 'BACKEND' | 'OFFLINE_FIXTURE';
 
 /** What the app knows about the extraction service before and between sessions. */
 export interface BackendResolution {
-  readonly state: 'UNKNOWN' | 'BACKEND_REPLAY' | 'BACKEND_LIVE' | 'UNREACHABLE';
+  readonly state: 'UNKNOWN' | 'NOT_CONFIGURED' | 'BACKEND_REPLAY' | 'BACKEND_LIVE' | 'UNREACHABLE';
 }
 
 export interface ControlsModel {
@@ -241,12 +241,23 @@ export interface ControlsModel {
   readonly busyLine: string | null;
   readonly errorLine: string | null;
   readonly caption: string | null;
+  /** The caption is on its way out: paint it dimmer. */
+  readonly captionFading: boolean;
+  /** Set only when a controlled test fixture is active, so a fixture can never pass for the normal replay. */
+  readonly fixtureLine: string | null;
+}
+
+export interface CaptionState {
+  readonly text: string;
+  readonly fading: boolean;
 }
 
 export function deriveControls(
   snap: SessionSnapshot | null,
   resolution: BackendResolution,
   source: ExtractionSource | null,
+  caption: CaptionState | null = null,
+  fixture: string | null = null,
 ): ControlsModel {
   const lc = snap?.session.lifecycle ?? 'IDLE';
   const complete = lc === 'ENDED' && !!snap?.session.inputExhausted;
@@ -265,7 +276,7 @@ export function deriveControls(
   } else if (mode === 'MIXED') {
     extractionLabel = LABELS.mixed;
     isReplay = true;
-  } else if (resolution.state === 'UNREACHABLE') {
+  } else if (resolution.state === 'UNREACHABLE' || resolution.state === 'NOT_CONFIGURED') {
     extractionLabel = LABELS.replay;
     isReplay = true;
   } else if (resolution.state === 'BACKEND_REPLAY') {
@@ -277,8 +288,16 @@ export function deriveControls(
     extractionLabel = LABELS.checking;
   }
   if (isReplay) {
-    const src = source ?? (resolution.state === 'UNREACHABLE' ? 'OFFLINE_FIXTURE' : resolution.state === 'BACKEND_REPLAY' ? 'BACKEND' : null);
-    detail = src === 'OFFLINE_FIXTURE' ? 'Backend unreachable: using the offline recorded replay.' : src === 'BACKEND' ? 'Served by the backend replay provider (hand-authored fixtures).' : null;
+    const offline = resolution.state === 'UNREACHABLE' || resolution.state === 'NOT_CONFIGURED';
+    const src = source ?? (offline ? 'OFFLINE_FIXTURE' : resolution.state === 'BACKEND_REPLAY' ? 'BACKEND' : null);
+    detail =
+      src === 'OFFLINE_FIXTURE'
+        ? resolution.state === 'NOT_CONFIGURED'
+          ? 'Offline recorded replay. No backend configured.'
+          : 'Backend unreachable: using the offline recorded replay.'
+        : src === 'BACKEND'
+          ? 'Served by the backend replay provider (hand-authored fixtures).'
+          : null;
   }
 
   let primary: ControlsModel['primary'];
@@ -321,7 +340,6 @@ export function deriveControls(
     FAILED: 'FAILED',
   };
 
-  const partial = snap?.livePartial;
   return {
     lifecycle,
     lifecycleText: lifecycleText[lifecycle],
@@ -334,6 +352,8 @@ export function deriveControls(
     retry: failed > 0,
     busyLine,
     errorLine,
-    caption: partial ? `${partial.speaker === 'DOCTOR' ? 'Doctor' : partial.speaker === 'PATIENT' ? 'Patient' : '?'}: ${partial.text}` : null,
+    caption: caption?.text ?? null,
+    captionFading: caption?.fading ?? false,
+    fixtureLine: fixture ? `TEST FIXTURE: ${fixture}` : null,
   };
 }

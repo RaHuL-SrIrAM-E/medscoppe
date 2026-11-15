@@ -26,6 +26,12 @@ export function beadWorldPosition(observationId: string, out: Vector3): Vector3 
   return p ? out.copy(p) : null;
 }
 
+// How far a bead's label reaches to the right of the bead centre (metres, unscaled), so the card can clear it.
+const labelReach = new Map<string, number>();
+export function beadLabelReach(observationId: string): number {
+  return labelReach.get(observationId) ?? 0.2;
+}
+
 interface LabelTexture { texture: CanvasTexture; aspect: number }
 const labelCache = new Map<string, LabelTexture>();
 
@@ -209,6 +215,7 @@ export class ObservationBeadsSystem extends createSystem({ roots: { required: [A
       material.needsUpdate = true;
       view.label.scale.set(LABEL_H * tex.aspect, LABEL_H, 1);
       view.label.position.set(HIT_R + 0.01 + (LABEL_H * tex.aspect) / 2, 0, 0);
+      labelReach.set(bead.observationId, HIT_R + 0.01 + LABEL_H * tex.aspect);
     }
   }
 
@@ -260,7 +267,7 @@ export class ObservationBeadsSystem extends createSystem({ roots: { required: [A
       const selected = id === this.selectedId;
       const pulse = bead.presence === 'UNRESOLVED' ? 1 + 0.12 * Math.sin(time * 3.2) : 1;
       view.group.position.copy(view.pos);
-      view.group.scale.setScalar((0.2 + 0.8 * view.appear) * (selected ? 1.25 : 1));
+      view.group.scale.setScalar((0.2 + 0.8 * view.appear) * (selected ? 1.12 : 1));
       view.accent.scale.setScalar(pulse);
       view.group.quaternion.identity();
       livePositions.set(id, view.pos);

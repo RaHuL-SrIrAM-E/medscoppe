@@ -12,7 +12,7 @@ import type { Scheduler } from '../core/scheduler.js';
 import type { ExtractionClient } from '../extraction/extraction-client.js';
 import { ConsultationSession, type SessionSnapshot } from '../session/consultation-session.js';
 import type { TranscriptionProvider } from '../transcription/transcription-provider.js';
-import { deriveBeads, deriveCard, deriveControls, type BackendResolution, type BeadModel, type CardModel, type ControlsModel, type ExtractionSource } from '../ui/consult-view-model.js';
+import { deriveBeads, deriveCard, deriveControls, type BackendResolution, type BeadModel, type CaptionState, type CardModel, type ControlsModel, type ExtractionSource, type ReviewPanel } from '../ui/consult-view-model.js';
 
 export interface ExtractionResolution {
   readonly client: ExtractionClient;
@@ -30,7 +30,14 @@ export interface ConsultAppDeps {
   readonly resolveExtraction: () => Promise<ExtractionResolution>;
   /** Lets the app clear the anatomy selection so only one card is open at a time. */
   readonly emit: (intent: Intent, source: IntentSource) => void;
+  /** Name of an active controlled test fixture, shown on the controls. Null in normal use. */
+  readonly testFixture?: string | null;
 }
+
+/** The caption holds a finished line briefly, then dims, then goes. */
+export const CAPTION_FADE_AFTER_MS = 1500;
+export const CAPTION_CLEAR_AFTER_MS = 3200;
+export const CAPTION_MAX_CHARS = 60;
 
 export interface AppSnapshot {
   readonly session: SessionSnapshot | null;
@@ -74,6 +81,10 @@ export class ConsultApp {
   private listeners = new Set<AppListener>();
   private snapshot: AppSnapshot;
   private emitting = false;
+  private panel: ReviewPanel | null = null;
+  private caption: CaptionState | null = null;
+  private captionTimers: Array<() => void> = [];
+  private seenUtterances = 0;
 
   constructor(private readonly deps: ConsultAppDeps) {
     this.snapshot = this.build();
@@ -134,7 +145,15 @@ export class ConsultApp {
       case 'CONFIRM_OBSERVATION':
       case 'REJECT_OBSERVATION':
       case 'RESOLVE_CONFLICT':
+      case 'CORRECT_OBSERVATION':
+      case 'ANNOTATE_OBSERVATION':
         this.review(intent, source);
+        return;
+      case 'SET_REVIEW_PANEL':
+        if (this.selected) {
+          this.panel = intent.panel === this.panel ? null : intent.panel;
+          this.commit();
+        }
         return;
       case 'SELECT_STRUCTURE':
       case 'SHOW_CLINICAL_INFORMATION':
@@ -146,6 +165,7 @@ export class ConsultApp {
   }
 
   dispose(): void {
+    this.clearCaptionTimers();
     this.unsubscribeSession?.();
     this.session?.dispose();
     this.session = null;
@@ -172,6 +192,9 @@ export class ConsultApp {
       this.selected = null;
       this.notice = null;
       this.autoEnding = false;
+      this.panel = null;
+      this.setCaption(null);
+      this.seenUtterances = 0;
       this.source = resolved.source;
       this.resolution = { state: resolved.backend };
       const session = new ConsultationSession({
@@ -201,6 +224,7 @@ export class ConsultApp {
 
   private onSession(s: SessionSnapshot): void {
     if (this.selected && !s.context.order.includes(this.selected)) this.selected = null;
+    this.updateCaption(s);
     this.commit();
     // The script is finite: when it has delivered everything and extraction has drained, the run is complete.
     if (s.session.inputExhausted && s.session.lifecycle === 'LISTENING' && !this.autoEnding) {
@@ -209,6 +233,45 @@ export class ConsultApp {
       void session?.whenIdle().then(() => {
         if (this.session === session && session?.getSnapshot().session.lifecycle === 'LISTENING') session.end();
       });
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------- caption
+  private clearCaptionTimers(): void {
+    for (const cancel of this.captionTimers) cancel();
+    this.captionTimers = [];
+  }
+
+  private setCaption(c: CaptionState | null): void {
+    this.clearCaptionTimers();
+    this.caption = c;
+  }
+
+  private static line(speaker: string, text: string): string {
+    const who = speaker === 'DOCTOR' ? 'Doctor' : speaker === 'PATIENT' ? 'Patient' : '?';
+    const room = CAPTION_MAX_CHARS - who.length - 2;
+    return `${who}: ${text.length > room ? text.slice(-room) : text}`;
+  }
+
+  /** One line only: the live partial while someone speaks, then the end of the finished utterance, which fades. */
+  private updateCaption(s: SessionSnapshot): void {
+    if (s.livePartial) {
+      this.setCaption({ text: ConsultApp.line(s.livePartial.speaker, s.livePartial.text), fading: false });
+      return;
+    }
+    if (s.utterances.length > this.seenUtterances) {
+      this.seenUtterances = s.utterances.length;
+      const u = s.utterances[s.utterances.length - 1]!;
+      this.setCaption({ text: ConsultApp.line(u.speaker, u.text), fading: false });
+      this.captionTimers.push(
+        this.deps.scheduler.schedule(CAPTION_FADE_AFTER_MS, () => {
+          if (this.caption) { this.caption = { ...this.caption, fading: true }; this.commit(); }
+        }),
+        this.deps.scheduler.schedule(CAPTION_CLEAR_AFTER_MS, () => {
+          this.caption = null;
+          this.commit();
+        }),
+      );
     }
   }
 
@@ -232,10 +295,14 @@ export class ConsultApp {
   private setSelected(id: string | null): void {
     if (this.selected === id) return;
     this.selected = id;
+    this.panel = null;
     this.commit();
   }
 
-  private review(intent: Extract<Intent, { type: 'CONFIRM_OBSERVATION' | 'REJECT_OBSERVATION' | 'RESOLVE_CONFLICT' }>, source: IntentSource): void {
+  private review(
+    intent: Extract<Intent, { type: 'CONFIRM_OBSERVATION' | 'REJECT_OBSERVATION' | 'RESOLVE_CONFLICT' | 'CORRECT_OBSERVATION' | 'ANNOTATE_OBSERVATION' }>,
+    source: IntentSource,
+  ): void {
     if (!this.session) return;
     if (!EXPLICIT_SOURCES.has(source)) {
       this.notice = 'Review actions need an explicit press on the card.';
@@ -243,9 +310,28 @@ export class ConsultApp {
       return;
     }
     const id = intent.observationId;
-    const error =
-      intent.type === 'CONFIRM_OBSERVATION' ? this.session.confirm(id) : intent.type === 'REJECT_OBSERVATION' ? this.session.reject(id) : this.session.resolveConflict(id);
+    let error: ActionError | null;
+    switch (intent.type) {
+      case 'CONFIRM_OBSERVATION':
+        error = this.session.confirm(id);
+        break;
+      case 'REJECT_OBSERVATION':
+        error = this.session.reject(id);
+        break;
+      case 'RESOLVE_CONFLICT':
+        error = this.session.resolveConflict(id);
+        break;
+      case 'CORRECT_OBSERVATION':
+        error = this.session.correct(id, {
+          ...(intent.status ? { status: intent.status } : {}),
+          ...(intent.severity ? { attributes: { severity: intent.severity } } : {}),
+        });
+        break;
+      default:
+        error = this.session.annotate(id, intent.note);
+    }
     this.notice = error ? ACTION_NOTICE[error] : null;
+    if (!error) this.panel = null;
     this.commit();
   }
 
@@ -256,10 +342,10 @@ export class ConsultApp {
     const selected = this.selected && beads.some((b) => b.observationId === this.selected) ? this.selected : null;
     return {
       session: sessionSnap,
-      controls: deriveControls(sessionSnap, this.resolution, this.source),
+      controls: deriveControls(sessionSnap, this.resolution, this.source, this.caption, this.deps.testFixture ?? null),
       beads,
       selectedObservationId: selected,
-      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected) : null,
+      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected, this.panel) : null,
       notice: this.notice,
       extractionSource: this.source,
       revision: ++this.rev,

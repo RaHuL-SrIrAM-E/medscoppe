@@ -84,7 +84,7 @@ export class ConsultControlsSystem extends createSystem({}) {
     this.primary?.setProperties({ borderColor: c.primary.action === 'NONE' ? BUTTON_IDLE : BUTTON_LIVE });
     this.end?.setProperties({ display: c.end ? 'flex' : 'none' });
     this.retry?.setProperties({ display: c.retry ? 'flex' : 'none' });
-    set('caption', show(c.caption));
+    set('caption', { ...show(c.caption), opacity: c.captionFading ? 0.35 : 1 });
     set('error', show(c.errorLine));
     set('notice', show(snap.notice));
   }
