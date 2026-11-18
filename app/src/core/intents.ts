@@ -33,7 +33,7 @@ export type Intent =
   | { type: 'CORRECT_OBSERVATION'; observationId: string; status?: 'PRESENT' | 'ABSENT'; severity?: 'MILD' | 'MODERATE' | 'SEVERE' }
   | { type: 'ANNOTATE_OBSERVATION'; observationId: string; note: string }
   /** UI-only: which review option row the card shows. Changes no observation. */
-  | { type: 'SET_REVIEW_PANEL'; panel: 'CORRECT' | 'NOTE' | null };
+  | { type: 'SET_REVIEW_PANEL'; panel: 'CORRECT' | 'NOTE' | 'REFERENCE' | null };
 
 export type IntentEnvelope = { intent: Intent; source: IntentSource };
 export type IntentListener = (envelope: IntentEnvelope) => void;

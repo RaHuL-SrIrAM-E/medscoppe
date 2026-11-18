@@ -6,6 +6,7 @@
  * Wording rules: nothing here states a diagnosis. A patient-stated condition is always labelled as the patient's own
  * statement and offers no confirmation. Status colours never use alarm semantics for observations.
  */
+import { REFERENCE_NOTICE, conditionReference } from './condition-reference.js';
 import type { Observation, Utterance } from '../contracts/schema.js';
 import type { Intent } from '../../core/intents.js';
 import { visibleObservations, type ConsultationState } from '../context/context-store.js';
@@ -87,7 +88,7 @@ export function deriveBeads(context: ConsultationState): BeadModel[] {
 }
 
 // ---------------------------------------------------------------------------------------------- card
-export type ReviewPanel = 'CORRECT' | 'NOTE';
+export type ReviewPanel = 'CORRECT' | 'NOTE' | 'REFERENCE';
 
 /** One tappable option on the card's review row. The intent is what pressing it emits. */
 export interface CardOption {
@@ -122,8 +123,11 @@ export interface CardModel {
     readonly resolve: boolean;
     readonly correct: boolean;
     readonly annotate: boolean;
+    readonly reference: boolean;
   };
   readonly panel: ReviewPanel | null;
+  /** Educational tests and medicine classes for a patient-stated condition; shown only while the reference view is open. */
+  readonly reference: { readonly testsLine: string; readonly medicinesLine: string; readonly notice: string } | null;
   /** Options for the open review row (empty when no row is open). */
   readonly options: readonly CardOption[];
 }
@@ -174,7 +178,8 @@ export function deriveCard(
 
   const d = o.attributes.duration;
   const canCorrect = !isCondition && !unresolved;
-  const openPanel = panel === 'CORRECT' && !canCorrect ? null : panel;
+  const ref = isCondition ? conditionReference(o.label) : null;
+  const openPanel = (panel === 'CORRECT' && !canCorrect) || (panel === 'REFERENCE' && !isCondition) ? null : panel;
   const options: CardOption[] = [];
   if (openPanel === 'CORRECT') {
     if (o.status !== 'PRESENT') options.push({ label: 'Mark present', intent: { type: 'CORRECT_OBSERVATION', observationId: o.id, status: 'PRESENT' } });
@@ -213,8 +218,17 @@ export function deriveCard(
       resolve: !isCondition && unresolved && o.conflicts_with.length > 0,
       correct: canCorrect,
       annotate: true,
+      reference: isCondition,
     },
     panel: openPanel,
+    reference:
+      openPanel === 'REFERENCE'
+        ? {
+            testsLine: ref ? `Tests to consider: ${ref.tests.join('; ')}` : 'No reference entry for this condition yet.',
+            medicinesLine: ref ? `Medicine classes: ${ref.medicines.join('; ')}` : '',
+            notice: REFERENCE_NOTICE,
+          }
+        : null,
     options,
   };
 }

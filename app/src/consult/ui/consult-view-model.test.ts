@@ -75,7 +75,7 @@ describe('card', () => {
       evidenceLabel: 'Patient said',
     });
     expect(card.evidenceQuote).toBe('"I\'ve been coughing for about five days"');
-    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false, correct: true, annotate: true });
+    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false, correct: true, annotate: true, reference: false });
   });
 
   it('a confirmed observation no longer offers Confirm and says it was an explicit action', () => {
@@ -90,9 +90,26 @@ describe('card', () => {
   it('a patient-stated condition offers no confirm and no resolve, and says it is not a diagnosis', () => {
     const s = applyExtraction(createConsultation('c'), ExtractResponse.parse(patientBelief), at);
     const card = deriveCard(s, [], visibleObservations(s)[0]!.id)!;
-    expect(card.actions).toEqual({ confirm: false, reject: true, resolve: false, correct: false, annotate: true });
+    expect(card.actions).toEqual({ confirm: false, reject: true, resolve: false, correct: false, annotate: true, reference: true });
     expect(card.notice).toMatch(/not a diagnosis/);
     expect(card.presenceLine).toBe('Mentioned by the patient');
+  });
+
+  it('a condition opens an educational reference with tests and medicine classes, no doses, and stays unconfirmed', () => {
+    const s = applyExtraction(createConsultation('c'), ExtractResponse.parse(patientBelief), at);
+    const id = visibleObservations(s)[0]!.id;
+    expect(deriveCard(s, [], id)!.reference).toBeNull();
+    const card = deriveCard(s, [], id, 'REFERENCE')!;
+    expect(card.reference!.testsLine).toMatch(/Chest X-ray/);
+    expect(card.reference!.medicinesLine).toMatch(/Antibiotics/);
+    expect(card.reference!.medicinesLine + card.reference!.testsLine).not.toMatch(/\d+\s?(mg|ml|mcg)/i);
+    expect(card.reference!.notice).toMatch(/Not a diagnosis/);
+    expect(card.confirmed).toBe(false);
+  });
+
+  it('a symptom has no reference view', () => {
+    const s = full();
+    expect(deriveCard(s, [], visibleObservations(s)[0]!.id, 'REFERENCE')!.reference).toBeNull();
   });
 
   it('systemic observations are not given an anatomical location', () => {

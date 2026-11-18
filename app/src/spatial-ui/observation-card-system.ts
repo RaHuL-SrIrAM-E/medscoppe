@@ -65,10 +65,10 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private tryBind(): void {
     const panel = this.world.getSceneObject<UIKitMLAsset>('observation-card');
     if (!panel) return;
-    for (const id of ['obs-btn-close-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice']) {
+    for (const id of ['obs-btn-close-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice', 'ref-tests', 'ref-meds', 'ref-notice']) {
       this.els[id] = panel.getElementById<UIKit.Text>(id);
     }
-    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note']) this.buttons[id] = panel.getElementById(id);
+    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note', 'obs-btn-ref']) this.buttons[id] = panel.getElementById(id);
     const wire = (id: string, handler: () => void): void => {
       const el = this.buttons[id];
       if (!el) return;
@@ -80,6 +80,7 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     wire('obs-btn-resolve', () => { const id = current(); if (id) intentBus.emit({ type: 'RESOLVE_CONFLICT', observationId: id }, this.source()); });
     wire('obs-btn-reject', () => { const id = current(); if (id) intentBus.emit({ type: 'REJECT_OBSERVATION', observationId: id }, this.source()); });
     wire('obs-btn-correct', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'CORRECT' }, this.source()));
+    wire('obs-btn-ref', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'REFERENCE' }, this.source()));
     wire('obs-btn-note', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'NOTE' }, this.source()));
     wire('obs-btn-close', () => {
       // while a review row is open this is "Back": it closes the row; otherwise it closes the card
@@ -99,7 +100,8 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private paint(card: CardModel): void {
     const set = (id: string, props: Record<string, unknown>): void => this.els[id]?.setProperties(props);
     const row = (text: string | null) => ({ text: text ?? '', display: text ? 'flex' : 'none' });
-    const choosing = card.panel !== null;
+    const showingRef = card.panel === 'REFERENCE' && card.reference !== null;
+    const choosing = card.panel !== null && !showingRef;
     // while a review row is open the card shrinks to the title, the choices and Back: the evidence stays one press away
     const hide = { display: 'none' };
     set('title', { text: card.title });
@@ -114,11 +116,15 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     set('evidence', choosing ? hide : { text: card.evidenceQuote, display: 'flex' });
     set('placement', choosing ? hide : { text: card.placementNote, display: 'flex' });
     set('notice', choosing ? hide : row(card.notice));
-    set('obs-btn-close-label', { text: choosing ? 'Back' : 'Close' });
+    set('ref-tests', showingRef ? { text: card.reference!.testsLine, display: 'flex' } : hide);
+    set('ref-meds', showingRef && card.reference!.medicinesLine ? { text: card.reference!.medicinesLine, display: 'flex' } : hide);
+    set('ref-notice', showingRef ? { text: card.reference!.notice, display: 'flex' } : hide);
+    set('obs-btn-close-label', { text: choosing || showingRef ? 'Back' : 'Close' });
     this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm && !choosing ? 'flex' : 'none' });
     this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve && !choosing ? 'flex' : 'none' });
     this.buttons['obs-btn-reject']?.setProperties({ display: card.actions.reject && !choosing ? 'flex' : 'none' });
     this.buttons['obs-btn-correct']?.setProperties({ display: card.actions.correct && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-ref']?.setProperties({ display: card.actions.reference && !choosing && !showingRef ? 'flex' : 'none' });
     this.buttons['obs-btn-note']?.setProperties({ display: card.actions.annotate && !choosing ? 'flex' : 'none' });
     for (let i = 0; i < OPTION_SLOTS; i++) {
       const opt = card.options[i];
