@@ -133,6 +133,26 @@ describe('card', () => {
     expect(deriveCard(s, [], noPain.id)!.actions.reference).toBe(false);
   });
 
+  it('offers an illustrative X-ray only where a condition has one, and cycles film -> in body -> off', () => {
+    const s = applyExtraction(createConsultation('c'), ExtractResponse.parse(patientBelief), at);
+    const id = visibleObservations(s)[0]!.id;
+    expect(deriveCard(s, [], id)!.xray).toBeNull(); // not in the reference view
+    const off = deriveCard(s, [], id, 'REFERENCE')!.xray!;
+    expect(off).toMatchObject({ conditionName: 'Pneumonia', mode: 'OFF', buttonLabel: 'View X-ray', nextIntent: { type: 'SET_XRAY', mode: 'FILM' } });
+    expect(off.finding.structureIds).toEqual(['respiratory.lung.right.lower-lobe']);
+    const film = deriveCard(s, [], id, 'REFERENCE', null, 'FILM')!.xray!;
+    expect(film).toMatchObject({ buttonLabel: 'Show in body', nextIntent: { type: 'SET_XRAY', mode: 'LOCATE' } });
+    expect(deriveCard(s, [], id, 'REFERENCE', null, 'LOCATE')!.xray).toMatchObject({ buttonLabel: 'Hide X-ray', nextIntent: { type: 'SET_XRAY', mode: 'OFF' } });
+  });
+
+  it('a symptom reaches the X-ray only through a cause that has one, and every finding names real structures', () => {
+    const s = full();
+    const cough = visibleObservations(s).find((o) => o.symptom === 'COUGH')!;
+    expect(deriveCard(s, [], cough.id, 'REFERENCE')!.xray).toBeNull(); // the list of causes
+    expect(deriveCard(s, [], cough.id, 'REFERENCE', 'pneumonia')!.xray).not.toBeNull();
+    expect(deriveCard(s, [], cough.id, 'REFERENCE', 'asthma')!.xray).toBeNull(); // no film for asthma
+  });
+
   it('no reference text contains a dose', () => {
     const s = full();
     for (const o of visibleObservations(s)) {

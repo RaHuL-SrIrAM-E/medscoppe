@@ -6,7 +6,7 @@
  * Wording rules: nothing here states a diagnosis. A patient-stated condition is always labelled as the patient's own
  * statement and offers no confirmation. Status colours never use alarm semantics for observations.
  */
-import { REFERENCE_NOTICE, commonCauses, conditionReference, referenceByKey } from './condition-reference.js';
+import { REFERENCE_NOTICE, commonCauses, conditionReference, referenceByKey, type XrayFinding } from './condition-reference.js';
 import type { Observation, Utterance } from '../contracts/schema.js';
 import type { Intent } from '../../core/intents.js';
 import { visibleObservations, type ConsultationState } from '../context/context-store.js';
@@ -88,6 +88,17 @@ export function deriveBeads(context: ConsultationState): BeadModel[] {
 }
 
 // ---------------------------------------------------------------------------------------------- card
+export type XrayMode = 'OFF' | 'FILM' | 'LOCATE';
+
+export interface XrayModel {
+  readonly conditionName: string;
+  readonly finding: XrayFinding;
+  readonly mode: XrayMode;
+  readonly buttonLabel: string;
+  /** What pressing the X-ray button emits: OFF -> FILM -> LOCATE -> OFF. */
+  readonly nextIntent: Intent;
+}
+
 export type ReviewPanel = 'CORRECT' | 'NOTE' | 'REFERENCE';
 
 /** One tappable option on the card's review row. The intent is what pressing it emits. */
@@ -128,6 +139,8 @@ export interface CardModel {
   readonly panel: ReviewPanel | null;
   /** Wording of the reference button: tests and medicines for a condition, possible causes for a symptom. */
   readonly referenceLabel: string;
+  /** Set only in the reference view of a condition that has an illustrative chest film. */
+  readonly xray: XrayModel | null;
   /** Educational tests and medicine classes for a patient-stated condition; shown only while the reference view is open. */
   readonly reference: { readonly heading: string; readonly testsLine: string; readonly medicinesLine: string; readonly notice: string; /** Back returns to the list of causes rather than closing the view. */ readonly backToList: boolean } | null;
   /** Options for the open review row (empty when no row is open). */
@@ -156,6 +169,7 @@ export function deriveCard(
   observationId: string | null,
   panel: ReviewPanel | null = null,
   refCondition: string | null = null,
+  xrayMode: XrayMode = 'OFF',
 ): CardModel | null {
   if (!observationId) return null;
   const o = visibleObservations(context).find((x) => x.id === observationId);
@@ -230,6 +244,16 @@ export function deriveCard(
     },
     panel: openPanel,
     referenceLabel: isCondition ? 'Tests & medicines' : 'Possible causes',
+    xray:
+      openPanel === 'REFERENCE' && ref?.xray
+        ? {
+            conditionName: ref.name,
+            finding: ref.xray,
+            mode: xrayMode,
+            buttonLabel: xrayMode === 'OFF' ? 'View X-ray' : xrayMode === 'FILM' ? 'Show in body' : 'Hide X-ray',
+            nextIntent: { type: 'SET_XRAY', mode: xrayMode === 'OFF' ? 'FILM' : xrayMode === 'FILM' ? 'LOCATE' : 'OFF' },
+          }
+        : null,
     reference:
       openPanel === 'REFERENCE'
         ? listing

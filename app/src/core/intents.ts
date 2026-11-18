@@ -33,6 +33,11 @@ export type Intent =
   | { type: 'CORRECT_OBSERVATION'; observationId: string; status?: 'PRESENT' | 'ABSENT'; severity?: 'MILD' | 'MODERATE' | 'SEVERE' }
   | { type: 'ANNOTATE_OBSERVATION'; observationId: string; note: string }
   /** UI-only: which review option row the card shows. Changes no observation. */
+  /** UI-only: glow these structures (and everything inside them) without selecting them or opening any card. */
+  | { type: 'HIGHLIGHT_STRUCTURES'; structureIds: readonly string[] }
+  | { type: 'CLEAR_HIGHLIGHT' }
+  /** UI-only: the illustrative X-ray film. OFF hides it, FILM shows it, LOCATE shows it and glows the matching structures. */
+  | { type: 'SET_XRAY'; mode: 'OFF' | 'FILM' | 'LOCATE' }
   /** UI-only: which possible cause the symptom reference view shows (null = the list of causes). */
   | { type: 'SET_REFERENCE_CONDITION'; condition: string | null }
   | { type: 'SET_REVIEW_PANEL'; panel: 'CORRECT' | 'NOTE' | 'REFERENCE' | null };

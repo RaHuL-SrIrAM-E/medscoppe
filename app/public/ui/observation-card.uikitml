@@ -62,6 +62,7 @@
     <button class="btn" id="obs-btn-resolve"><span class="btn-label" id="obs-btn-resolve-label">Keep this</span></button>
     <button class="btn" id="obs-btn-correct"><span class="btn-label" id="obs-btn-correct-label">Correct</span></button>
     <button class="btn" id="obs-btn-ref"><span class="btn-label" id="obs-btn-ref-label">Tests &amp; medicines</span></button>
+    <button class="btn" id="obs-btn-xray"><span class="btn-label" id="obs-btn-xray-label">View X-ray</span></button>
     <button class="btn" id="obs-btn-note"><span class="btn-label" id="obs-btn-note-label">Note</span></button>
     <button class="btn" id="obs-btn-reject"><span class="btn-label" id="obs-btn-reject-label">Dismiss</span></button>
     <button class="btn" id="obs-btn-close"><span class="btn-label" id="obs-btn-close-label">Close</span></button>

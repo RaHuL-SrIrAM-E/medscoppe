@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import registryDoc from '../../public/anatomy/structures.json';
 import infoDoc from '../../public/anatomy/structure-info.json';
+import { conditionReference } from '../consult/ui/condition-reference.js';
 import { anatomyStore, deriveVisual, initialState, reduce } from './anatomy-state.js';
 import { AnatomyRegistry, type RegistryDoc } from './registry.js';
 import { describeStructure, type InfoDoc } from './structure-info.js';
@@ -127,6 +128,45 @@ describe('anatomy state reducer', () => {
     anatomyStore.dispatch({ type: 'SELECT_STRUCTURE', structureId: 'respiratory.diaphragm' });
     off();
     expect(calls).toBe(1);
+  });
+});
+
+describe('X-ray findings', () => {
+  it('every illustrative finding points at structures that exist in the anatomy registry', () => {
+    for (const key of ['pneumonia', 'tuberculosis', 'copd', 'heart failure', 'lung cancer']) {
+      const finding = conditionReference(key)!.xray!;
+      expect(finding.structureIds.length).toBeGreaterThan(0);
+      for (const id of finding.structureIds) expect(registry.has(id), `${key}: ${id}`).toBe(true);
+    }
+  });
+});
+
+describe('highlight', () => {
+  const start = initialState(registry);
+  const lobe = 'respiratory.lung.right.lower-lobe';
+
+  it('glows a structure and everything inside it without selecting it or opening a card', () => {
+    const lit = reduce(start, { type: 'HIGHLIGHT_STRUCTURES', structureIds: ['respiratory.lung.right'] }, registry);
+    expect(lit.selectedId).toBeNull();
+    expect(lit.infoOpen).toBe(false);
+    expect(deriveVisual(lit, registry, lobe).emphasis).toBe(1);
+    expect(deriveVisual(lit, registry, 'respiratory.lung.left.upper-lobe').emphasis).toBe(0);
+  });
+
+  it('keeps a highlighted lobe translucent so what is inside it stays visible', () => {
+    const lit = reduce(start, { type: 'HIGHLIGHT_STRUCTURES', structureIds: [lobe] }, registry);
+    const v = deriveVisual(lit, registry, lobe);
+    expect(v.opacity).toBeGreaterThan(deriveVisual(start, registry, lobe).opacity);
+    expect(v.opacity).toBeLessThan(1);
+  });
+
+  it('ignores unknown ids, is cleared by CLEAR_HIGHLIGHT and RESET_VIEW, and is a no-op when unchanged', () => {
+    const lit = reduce(start, { type: 'HIGHLIGHT_STRUCTURES', structureIds: [lobe, 'nope'] }, registry);
+    expect(lit.highlightIds).toEqual([lobe]);
+    expect(reduce(lit, { type: 'HIGHLIGHT_STRUCTURES', structureIds: [lobe] }, registry)).toBe(lit);
+    expect(reduce(lit, { type: 'CLEAR_HIGHLIGHT' }, registry).highlightIds).toEqual([]);
+    expect(reduce(lit, { type: 'RESET_VIEW' }, registry).highlightIds).toEqual([]);
+    expect(reduce(start, { type: 'CLEAR_HIGHLIGHT' }, registry)).toBe(start);
   });
 });
 

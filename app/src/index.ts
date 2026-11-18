@@ -12,6 +12,7 @@ import { InfoCardSystem } from './spatial-ui/info-card-system.js';
 import { LayerDockSystem } from './spatial-ui/layer-dock-system.js';
 import { ObservationBeadsSystem } from './spatial-ui/observation-beads-system.js';
 import { ObservationCardSystem } from './spatial-ui/observation-card-system.js';
+import { XrayViewerSystem } from './spatial-ui/xray-viewer-system.js';
 import { preferEmulatedHands } from './interaction/emulator-hands.js';
 
 // The registry must exist before any system binds to the anatomy model.
@@ -29,6 +30,7 @@ World.create(
   world.registerSystem(ConsultControlsSystem);
   world.registerSystem(ObservationBeadsSystem);
   world.registerSystem(ObservationCardSystem);
+  world.registerSystem(XrayViewerSystem);
   installDesktopAdapter();
   if (import.meta.env.DEV) {
     preferEmulatedHands();

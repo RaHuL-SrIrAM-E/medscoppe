@@ -12,7 +12,7 @@ import type { Scheduler } from '../core/scheduler.js';
 import type { ExtractionClient } from '../extraction/extraction-client.js';
 import { ConsultationSession, type SessionSnapshot } from '../session/consultation-session.js';
 import type { TranscriptionProvider } from '../transcription/transcription-provider.js';
-import { deriveBeads, deriveCard, deriveControls, type BackendResolution, type BeadModel, type CaptionState, type CardModel, type ControlsModel, type ExtractionSource, type ReviewPanel } from '../ui/consult-view-model.js';
+import { deriveBeads, deriveCard, deriveControls, type BackendResolution, type BeadModel, type CaptionState, type CardModel, type ControlsModel, type ExtractionSource, type ReviewPanel, type XrayMode } from '../ui/consult-view-model.js';
 
 export interface ExtractionResolution {
   readonly client: ExtractionClient;
@@ -83,6 +83,7 @@ export class ConsultApp {
   private emitting = false;
   private panel: ReviewPanel | null = null;
   private refCondition: string | null = null;
+  private xrayMode: XrayMode = 'OFF';
   private caption: CaptionState | null = null;
   private captionTimers: Array<() => void> = [];
   private seenUtterances = 0;
@@ -154,12 +155,20 @@ export class ConsultApp {
         if (this.selected) {
           this.panel = intent.panel === this.panel ? null : intent.panel;
           this.refCondition = null;
+          this.xrayMode = 'OFF';
+          this.commit();
+        }
+        return;
+      case 'SET_XRAY':
+        if (this.selected && this.panel === 'REFERENCE') {
+          this.xrayMode = intent.mode;
           this.commit();
         }
         return;
       case 'SET_REFERENCE_CONDITION':
         if (this.selected && this.panel === 'REFERENCE') {
           this.refCondition = intent.condition;
+          this.xrayMode = 'OFF';
           this.commit();
         }
         return;
@@ -202,6 +211,7 @@ export class ConsultApp {
       this.autoEnding = false;
       this.panel = null;
       this.refCondition = null;
+      this.xrayMode = 'OFF';
       this.setCaption(null);
       this.seenUtterances = 0;
       this.source = resolved.source;
@@ -306,6 +316,7 @@ export class ConsultApp {
     this.selected = id;
     this.panel = null;
     this.refCondition = null;
+    this.xrayMode = 'OFF';
     this.commit();
   }
 
@@ -344,6 +355,7 @@ export class ConsultApp {
     if (!error) {
       this.panel = null;
       this.refCondition = null;
+      this.xrayMode = 'OFF';
     }
     this.commit();
   }
@@ -358,7 +370,7 @@ export class ConsultApp {
       controls: deriveControls(sessionSnap, this.resolution, this.source, this.caption, this.deps.testFixture ?? null),
       beads,
       selectedObservationId: selected,
-      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected, this.panel, this.refCondition) : null,
+      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected, this.panel, this.refCondition, this.xrayMode) : null,
       notice: this.notice,
       extractionSource: this.source,
       revision: ++this.rev,

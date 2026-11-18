@@ -66,10 +66,10 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private tryBind(): void {
     const panel = this.world.getSceneObject<UIKitMLAsset>('observation-card');
     if (!panel) return;
-    for (const id of ['obs-btn-close-label', 'obs-btn-ref-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice', 'ref-tests', 'ref-meds', 'ref-notice']) {
+    for (const id of ['obs-btn-close-label', 'obs-btn-ref-label', 'obs-btn-xray-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice', 'ref-tests', 'ref-meds', 'ref-notice']) {
       this.els[id] = panel.getElementById<UIKit.Text>(id);
     }
-    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note', 'obs-btn-ref']) this.buttons[id] = panel.getElementById(id);
+    for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note', 'obs-btn-ref', 'obs-btn-xray']) this.buttons[id] = panel.getElementById(id);
     const wire = (id: string, handler: () => void): void => {
       const el = this.buttons[id];
       if (!el) return;
@@ -82,6 +82,7 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     wire('obs-btn-reject', () => { const id = current(); if (id) intentBus.emit({ type: 'REJECT_OBSERVATION', observationId: id }, this.source()); });
     wire('obs-btn-correct', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'CORRECT' }, this.source()));
     wire('obs-btn-ref', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'REFERENCE' }, this.source()));
+    wire('obs-btn-xray', () => { const x = consultApp.getSnapshot().card?.xray; if (x) intentBus.emit(x.nextIntent, this.source()); });
     wire('obs-btn-note', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'NOTE' }, this.source()));
     wire('obs-btn-close', () => {
       // while a review row is open this is "Back": it closes the row; otherwise it closes the card
@@ -125,6 +126,8 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     set('ref-meds', showingRef && card.reference!.medicinesLine ? { text: card.reference!.medicinesLine, display: 'flex' } : hide);
     set('ref-notice', showingRef ? { text: card.reference!.notice, display: 'flex' } : hide);
     set('obs-btn-ref-label', { text: card.referenceLabel });
+    set('obs-btn-xray-label', { text: card.xray?.buttonLabel ?? '' });
+    this.buttons['obs-btn-xray']?.setProperties({ display: card.xray && showingRef ? 'flex' : 'none' });
     set('obs-btn-close-label', { text: choosing || showingRef ? 'Back' : 'Close' });
     this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm && !compact ? 'flex' : 'none' });
     this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve && !compact ? 'flex' : 'none' });

@@ -14,6 +14,8 @@ export interface AnatomyState {
   hoverId: string | null;
   isolatedId: string | null;
   infoOpen: boolean;
+  /** Structures glowing for orientation (for example where an X-ray finding sits). Not a selection. */
+  highlightIds: readonly string[];
 }
 
 const CONTEXT_SURFACE = 'surface';
@@ -25,7 +27,7 @@ export function initialState(registry: AnatomyRegistry): AnatomyState {
   }
   // Default framing: respiratory in focus, the skeleton as translucent context.
   if ('respiratory' in systemModes) systemModes.respiratory = 'active';
-  return { systemModes, selectedId: null, hoverId: null, isolatedId: null, infoOpen: false };
+  return { systemModes, selectedId: null, hoverId: null, isolatedId: null, infoOpen: false, highlightIds: [] };
 }
 
 export function reduce(state: AnatomyState, intent: Intent, registry: AnatomyRegistry): AnatomyState {
@@ -57,6 +59,13 @@ export function reduce(state: AnatomyState, intent: Intent, registry: AnatomyReg
       }
       return { ...state, selectedId: intent.structureId, infoOpen: false };
     }
+    case 'HIGHLIGHT_STRUCTURES': {
+      const ids = intent.structureIds.filter((id) => registry.has(id));
+      if (ids.length === state.highlightIds.length && ids.every((id, i) => id === state.highlightIds[i])) return state;
+      return { ...state, highlightIds: ids };
+    }
+    case 'CLEAR_HIGHLIGHT':
+      return state.highlightIds.length === 0 ? state : { ...state, highlightIds: [] };
     case 'CLEAR_SELECTION':
       return { ...state, selectedId: null, infoOpen: false };
     case 'HOVER_STRUCTURE':
@@ -91,11 +100,14 @@ const HIDDEN: Visual = { visible: false, opacity: 0, emphasis: 0, pickable: fals
 const GHOST_OPACITY = 0.1;
 /** Lung envelopes and the diaphragm are translucent so the airways and vessels inside stay visible. */
 const SHELL_OPACITY = 0.32;
+/** A highlighted lobe is denser, so it reads clearly while the airways and vessels inside stay visible. */
+const HIGHLIGHT_SHELL_OPACITY = 0.62;
 
 export function deriveVisual(state: AnatomyState, registry: AnatomyRegistry, id: string): Visual {
   const def = registry.get(id);
   if (!def) return HIDDEN;
-  const emphasis = id === state.selectedId ? 1 : id === state.hoverId ? 0.4 : 0;
+  const highlighted = state.highlightIds.some((h) => registry.isWithin(id, h));
+  const emphasis = id === state.selectedId || highlighted ? 1 : id === state.hoverId ? 0.4 : 0;
 
   if (state.isolatedId) {
     if (!registry.isWithin(id, state.isolatedId)) return HIDDEN;
@@ -107,7 +119,7 @@ export function deriveVisual(state: AnatomyState, registry: AnatomyRegistry, id:
     return { visible: true, opacity: def.system === CONTEXT_SURFACE ? 0.07 : GHOST_OPACITY, emphasis: 0, pickable: false };
   }
   const isShell = id.startsWith('respiratory.lung.') || id === 'respiratory.diaphragm';
-  return { visible: true, opacity: isShell && emphasis < 1 ? SHELL_OPACITY : 1, emphasis, pickable: true };
+  return { visible: true, opacity: isShell && (highlighted ? true : emphasis < 1) ? (highlighted ? HIGHLIGHT_SHELL_OPACITY : SHELL_OPACITY) : 1, emphasis, pickable: true };
 }
 
 type Listener = (state: AnatomyState, previous: AnatomyState) => void;
