@@ -82,6 +82,7 @@ export class ConsultApp {
   private snapshot: AppSnapshot;
   private emitting = false;
   private panel: ReviewPanel | null = null;
+  private refCondition: string | null = null;
   private caption: CaptionState | null = null;
   private captionTimers: Array<() => void> = [];
   private seenUtterances = 0;
@@ -152,6 +153,13 @@ export class ConsultApp {
       case 'SET_REVIEW_PANEL':
         if (this.selected) {
           this.panel = intent.panel === this.panel ? null : intent.panel;
+          this.refCondition = null;
+          this.commit();
+        }
+        return;
+      case 'SET_REFERENCE_CONDITION':
+        if (this.selected && this.panel === 'REFERENCE') {
+          this.refCondition = intent.condition;
           this.commit();
         }
         return;
@@ -193,6 +201,7 @@ export class ConsultApp {
       this.notice = null;
       this.autoEnding = false;
       this.panel = null;
+      this.refCondition = null;
       this.setCaption(null);
       this.seenUtterances = 0;
       this.source = resolved.source;
@@ -296,6 +305,7 @@ export class ConsultApp {
     if (this.selected === id) return;
     this.selected = id;
     this.panel = null;
+    this.refCondition = null;
     this.commit();
   }
 
@@ -331,7 +341,10 @@ export class ConsultApp {
         error = this.session.annotate(id, intent.note);
     }
     this.notice = error ? ACTION_NOTICE[error] : null;
-    if (!error) this.panel = null;
+    if (!error) {
+      this.panel = null;
+      this.refCondition = null;
+    }
     this.commit();
   }
 
@@ -345,7 +358,7 @@ export class ConsultApp {
       controls: deriveControls(sessionSnap, this.resolution, this.source, this.caption, this.deps.testFixture ?? null),
       beads,
       selectedObservationId: selected,
-      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected, this.panel) : null,
+      card: sessionSnap ? deriveCard(sessionSnap.context, sessionSnap.utterances, selected, this.panel, this.refCondition) : null,
       notice: this.notice,
       extractionSource: this.source,
       revision: ++this.rev,

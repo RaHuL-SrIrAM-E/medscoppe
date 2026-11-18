@@ -13,6 +13,7 @@ const OPTION_SLOTS = 5;
 const CARD_HALF_WIDTH = 0.17;
 const MAX_LABEL_CLEARANCE = 0.3; // a very long label may overlap the card edge slightly rather than push the card out of view
 const CARD_GAP = 0.04;
+const REFERENCE_OFFSET = 0.62; // metres left of the model axis
 const BORDER: Record<CardModel['origin'], string> = { PATIENT: '#8ab4ff', DOCTOR_OBSERVED: '#f2c14e', DOCTOR_CONFIRMED: '#7cf2d4' };
 const SOURCE_COLOUR = BORDER;
 
@@ -65,7 +66,7 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
   private tryBind(): void {
     const panel = this.world.getSceneObject<UIKitMLAsset>('observation-card');
     if (!panel) return;
-    for (const id of ['obs-btn-close-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice', 'ref-tests', 'ref-meds', 'ref-notice']) {
+    for (const id of ['obs-btn-close-label', 'obs-btn-ref-label', 'title', 'presence', 'source', 'confirm', 'duration', 'severity', 'revision', 'note', 'evidence-label', 'evidence', 'placement', 'notice', 'ref-tests', 'ref-meds', 'ref-notice']) {
       this.els[id] = panel.getElementById<UIKit.Text>(id);
     }
     for (const id of ['obs-btn-confirm', 'obs-btn-resolve', 'obs-btn-reject', 'obs-btn-close', 'obs-btn-correct', 'obs-btn-note', 'obs-btn-ref']) this.buttons[id] = panel.getElementById(id);
@@ -84,7 +85,9 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     wire('obs-btn-note', () => intentBus.emit({ type: 'SET_REVIEW_PANEL', panel: 'NOTE' }, this.source()));
     wire('obs-btn-close', () => {
       // while a review row is open this is "Back": it closes the row; otherwise it closes the card
-      const open = consultApp.getSnapshot().card?.panel;
+      const c = consultApp.getSnapshot().card;
+      const open = c?.panel;
+      if (c?.reference?.backToList) { intentBus.emit({ type: 'SET_REFERENCE_CONDITION', condition: null }, this.source()); return; }
       intentBus.emit(open ? { type: 'SET_REVIEW_PANEL', panel: open } : { type: 'CLEAR_OBSERVATION_SELECTION' }, this.source());
     });
     for (let i = 0; i < OPTION_SLOTS; i++) {
@@ -102,30 +105,33 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     const row = (text: string | null) => ({ text: text ?? '', display: text ? 'flex' : 'none' });
     const showingRef = card.panel === 'REFERENCE' && card.reference !== null;
     const choosing = card.panel !== null && !showingRef;
+    // the reference view drops the review fields so the lists fit on one small card
+    const compact = choosing || showingRef;
     // while a review row is open the card shrinks to the title, the choices and Back: the evidence stays one press away
     const hide = { display: 'none' };
     set('title', { text: card.title });
-    set('presence', { text: choosing ? (card.panel === 'CORRECT' ? 'Correct: choose one' : 'Add a short note: choose one') : card.presenceLine });
-    set('source', choosing ? hide : { text: card.sourceLine, color: SOURCE_COLOUR[card.origin], display: 'flex' });
-    set('confirm', choosing ? hide : { text: card.confirmLine, color: card.confirmed ? '#7cf2d4' : '#ffb454', display: 'flex' });
-    set('duration', choosing ? hide : row(card.durationLine));
-    set('severity', choosing ? hide : row(card.severityLine));
-    set('revision', choosing ? hide : row(card.revisionLine));
-    set('note', choosing ? hide : row(card.noteLine));
-    set('evidence-label', choosing ? hide : { text: card.evidenceLabel, display: 'flex' });
-    set('evidence', choosing ? hide : { text: card.evidenceQuote, display: 'flex' });
-    set('placement', choosing ? hide : { text: card.placementNote, display: 'flex' });
-    set('notice', choosing ? hide : row(card.notice));
+    set('presence', { text: showingRef ? card.reference!.heading : choosing ? (card.panel === 'CORRECT' ? 'Correct: choose one' : 'Add a short note: choose one') : card.presenceLine });
+    set('source', compact ? hide : { text: card.sourceLine, color: SOURCE_COLOUR[card.origin], display: 'flex' });
+    set('confirm', compact ? hide : { text: card.confirmLine, color: card.confirmed ? '#7cf2d4' : '#ffb454', display: 'flex' });
+    set('duration', compact ? hide : row(card.durationLine));
+    set('severity', compact ? hide : row(card.severityLine));
+    set('revision', compact ? hide : row(card.revisionLine));
+    set('note', compact ? hide : row(card.noteLine));
+    set('evidence-label', compact ? hide : { text: card.evidenceLabel, display: 'flex' });
+    set('evidence', compact ? hide : { text: card.evidenceQuote, display: 'flex' });
+    set('placement', compact ? hide : { text: card.placementNote, display: 'flex' });
+    set('notice', compact ? hide : row(card.notice));
     set('ref-tests', showingRef ? { text: card.reference!.testsLine, display: 'flex' } : hide);
     set('ref-meds', showingRef && card.reference!.medicinesLine ? { text: card.reference!.medicinesLine, display: 'flex' } : hide);
     set('ref-notice', showingRef ? { text: card.reference!.notice, display: 'flex' } : hide);
+    set('obs-btn-ref-label', { text: card.referenceLabel });
     set('obs-btn-close-label', { text: choosing || showingRef ? 'Back' : 'Close' });
-    this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm && !choosing ? 'flex' : 'none' });
-    this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve && !choosing ? 'flex' : 'none' });
-    this.buttons['obs-btn-reject']?.setProperties({ display: card.actions.reject && !choosing ? 'flex' : 'none' });
-    this.buttons['obs-btn-correct']?.setProperties({ display: card.actions.correct && !choosing ? 'flex' : 'none' });
-    this.buttons['obs-btn-ref']?.setProperties({ display: card.actions.reference && !choosing && !showingRef ? 'flex' : 'none' });
-    this.buttons['obs-btn-note']?.setProperties({ display: card.actions.annotate && !choosing ? 'flex' : 'none' });
+    this.buttons['obs-btn-confirm']?.setProperties({ display: card.actions.confirm && !compact ? 'flex' : 'none' });
+    this.buttons['obs-btn-resolve']?.setProperties({ display: card.actions.resolve && !compact ? 'flex' : 'none' });
+    this.buttons['obs-btn-reject']?.setProperties({ display: card.actions.reject && !compact ? 'flex' : 'none' });
+    this.buttons['obs-btn-correct']?.setProperties({ display: card.actions.correct && !compact ? 'flex' : 'none' });
+    this.buttons['obs-btn-ref']?.setProperties({ display: card.actions.reference && !compact && !showingRef ? 'flex' : 'none' });
+    this.buttons['obs-btn-note']?.setProperties({ display: card.actions.annotate && !compact ? 'flex' : 'none' });
     for (let i = 0; i < OPTION_SLOTS; i++) {
       const opt = card.options[i];
       this.buttons[`obs-opt-${i}`]?.setProperties({ display: opt ? 'flex' : 'none' });
@@ -159,8 +165,11 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     this.player.head.getWorldPosition(this.head);
     this.forward.set(this.axis.x - this.head.x, 0, this.axis.z - this.head.z).normalize();
     this.right.set(-this.forward.z, 0, this.forward.x);
-    this.target.copy(beadPos).addScaledVector(this.right, Math.min(beadLabelReach(card.observationId) * 1.12, MAX_LABEL_CLEARANCE) + CARD_GAP + CARD_HALF_WIDTH).addScaledVector(this.forward, -0.04);
-    this.target.y -= 0.12; // sit a little below the bead so a tall card stays inside the view
+    // the tests and medicines view is tall, so it sits to the LEFT of the body at chest height, where nothing else floats
+    const side = card.panel === 'REFERENCE' ? -1 : 1;
+    if (side < 0) this.target.copy(this.axis).addScaledVector(this.right, -REFERENCE_OFFSET).addScaledVector(this.forward, -0.04);
+    else this.target.copy(beadPos).addScaledVector(this.right, Math.min(beadLabelReach(card.observationId) * 1.12, MAX_LABEL_CLEARANCE) + CARD_GAP + CARD_HALF_WIDTH).addScaledVector(this.forward, -0.04);
+    this.target.y -= side < 0 ? 0.05 : 0.12; // sit a little below the bead so a tall card stays inside the view
 
     const k = 1 - Math.exp(-motion.smoothing * delta);
     if (this.shownFor !== card.observationId && this.panel.position.y < HIDDEN_Y + 1) this.panel.position.copy(this.target);
@@ -168,7 +177,7 @@ export class ObservationCardSystem extends createSystem({ roots: { required: [An
     this.shownFor = card.observationId;
     this.panel.lookAt(this.head);
 
-    this.edge.copy(this.panel.position).addScaledVector(this.right, -0.2);
+    this.edge.copy(this.panel.position).addScaledVector(this.right, -0.2 * side);
     this.edge.y += 0.1; // end near the title so the line does not cross the text
     const p = this.linePositions;
     p[0] = beadPos.x; p[1] = beadPos.y; p[2] = beadPos.z;

@@ -1,4 +1,5 @@
 import { AssetType, defineAssets } from '@iwsdk/core';
+import { createClinicRoom } from './scene-assets/clinic-room.scene-asset.js';
 import { createFloorRings } from './scene-assets/floor-rings.scene-asset.js';
 
 const publicAssetUrl = (filePath: string): string =>
@@ -19,6 +20,7 @@ export default defineAssets({
     priority: 'critical',
   },
   'floor-rings': createFloorRings(),
+  'clinic-room': createClinicRoom(),
   'layer-dock': uikitml('layer-dock.uikitml', 'Layer dock'),
   'info-card': uikitml('info-card.uikitml', 'Structure info card'),
   'consult-controls': uikitml('consult-controls.uikitml', 'Consultation controls'),

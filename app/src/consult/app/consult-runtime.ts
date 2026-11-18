@@ -5,7 +5,7 @@
  * Non-secret configuration only. The backend is OPT-IN: set `VITE_API_BASE_URL`, or pass `?consultBackend=on`
  * (http://localhost:8000) or `?consultBackend=<url>`. Without that the app makes no network request at all and
  * runs the offline recorded replay, so a missing backend produces no failed requests and no console noise.
- * Other URL parameters: `?consultSpeed=N` (default 1), `?consultFixture=failure|conflict` (controlled test scenarios,
+ * Other URL parameters: `?consultSpeed=N` (default 1), `?consultFixture=failure|conflict|belief` (controlled test scenarios,
  * always labelled on the controls) and `?consultDebug=1` (exposes a read-only state summary for browser tests).
  * No credential ever appears in the frontend.
  */
@@ -13,7 +13,7 @@ import { intentBus } from '../../core/intents.js';
 import { realScheduler } from '../core/scheduler.js';
 import { HttpExtractionClient } from '../extraction/extraction-client.js';
 import { FixtureExtractionClient } from '../testing/fixture-extraction-client.js';
-import { applyFailure, conflictResponses, conflictTranscript, isScenario } from '../testing/scenario-fixtures.js';
+import { applyFailure, beliefResponses, beliefTranscript, conflictResponses, conflictTranscript, isScenario } from '../testing/scenario-fixtures.js';
 import { syntheticResponses, syntheticTranscript } from '../testing/synthetic-fixtures.js';
 import { ScriptedProvider } from '../transcription/scripted-provider.js';
 import { ConsultApp, type ExtractionResolution } from './consult-app.js';
@@ -47,7 +47,7 @@ export function createConsultRuntime(): ConsultApp {
   const scenario = isScenario(scenarioParam) ? scenarioParam : null;
 
   const offlineClient = (): FixtureExtractionClient => {
-    const client = new FixtureExtractionClient(scenario === 'conflict' ? conflictResponses() : syntheticResponses(), realScheduler, { latencyMs: 500 / speed });
+    const client = new FixtureExtractionClient(scenario === 'conflict' ? conflictResponses() : scenario === 'belief' ? beliefResponses() : syntheticResponses(), realScheduler, { latencyMs: 500 / speed });
     if (scenario === 'failure') applyFailure(client);
     return client;
   };
@@ -65,7 +65,7 @@ export function createConsultRuntime(): ConsultApp {
     return { client: offlineClient(), source: 'OFFLINE_FIXTURE', backend: 'NOT_CONFIGURED' };
   };
 
-  const transcript = scenario === 'conflict' ? conflictTranscript() : syntheticTranscript;
+  const transcript = scenario === 'conflict' ? conflictTranscript() : scenario === 'belief' ? beliefTranscript() : syntheticTranscript;
   const app = new ConsultApp({
     consultationId: transcript.consultation_id,
     scheduler: realScheduler,

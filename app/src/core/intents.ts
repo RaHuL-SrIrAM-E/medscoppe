@@ -33,6 +33,8 @@ export type Intent =
   | { type: 'CORRECT_OBSERVATION'; observationId: string; status?: 'PRESENT' | 'ABSENT'; severity?: 'MILD' | 'MODERATE' | 'SEVERE' }
   | { type: 'ANNOTATE_OBSERVATION'; observationId: string; note: string }
   /** UI-only: which review option row the card shows. Changes no observation. */
+  /** UI-only: which possible cause the symptom reference view shows (null = the list of causes). */
+  | { type: 'SET_REFERENCE_CONDITION'; condition: string | null }
   | { type: 'SET_REVIEW_PANEL'; panel: 'CORRECT' | 'NOTE' | 'REFERENCE' | null };
 
 export type IntentEnvelope = { intent: Intent; source: IntentSource };

@@ -6,7 +6,7 @@
  * Wording rules: nothing here states a diagnosis. A patient-stated condition is always labelled as the patient's own
  * statement and offers no confirmation. Status colours never use alarm semantics for observations.
  */
-import { REFERENCE_NOTICE, conditionReference } from './condition-reference.js';
+import { REFERENCE_NOTICE, commonCauses, conditionReference, referenceByKey } from './condition-reference.js';
 import type { Observation, Utterance } from '../contracts/schema.js';
 import type { Intent } from '../../core/intents.js';
 import { visibleObservations, type ConsultationState } from '../context/context-store.js';
@@ -126,8 +126,10 @@ export interface CardModel {
     readonly reference: boolean;
   };
   readonly panel: ReviewPanel | null;
+  /** Wording of the reference button: tests and medicines for a condition, possible causes for a symptom. */
+  readonly referenceLabel: string;
   /** Educational tests and medicine classes for a patient-stated condition; shown only while the reference view is open. */
-  readonly reference: { readonly testsLine: string; readonly medicinesLine: string; readonly notice: string } | null;
+  readonly reference: { readonly heading: string; readonly testsLine: string; readonly medicinesLine: string; readonly notice: string; /** Back returns to the list of causes rather than closing the view. */ readonly backToList: boolean } | null;
   /** Options for the open review row (empty when no row is open). */
   readonly options: readonly CardOption[];
 }
@@ -153,6 +155,7 @@ export function deriveCard(
   utterances: readonly Utterance[],
   observationId: string | null,
   panel: ReviewPanel | null = null,
+  refCondition: string | null = null,
 ): CardModel | null {
   if (!observationId) return null;
   const o = visibleObservations(context).find((x) => x.id === observationId);
@@ -178,8 +181,11 @@ export function deriveCard(
 
   const d = o.attributes.duration;
   const canCorrect = !isCondition && !unresolved;
-  const ref = isCondition ? conditionReference(o.label) : null;
-  const openPanel = (panel === 'CORRECT' && !canCorrect) || (panel === 'REFERENCE' && !isCondition) ? null : panel;
+  const causes = !isCondition && o.status === 'PRESENT' ? commonCauses(o.symptom) : [];
+  const canReference = isCondition || causes.length > 0;
+  const ref = isCondition ? conditionReference(o.label) : referenceByKey(causes.some((c) => c.key === refCondition) ? refCondition : null);
+  const listing = !isCondition && causes.length > 0 && !ref;
+  const openPanel = (panel === 'CORRECT' && !canCorrect) || (panel === 'REFERENCE' && !canReference) ? null : panel;
   const options: CardOption[] = [];
   if (openPanel === 'CORRECT') {
     if (o.status !== 'PRESENT') options.push({ label: 'Mark present', intent: { type: 'CORRECT_OBSERVATION', observationId: o.id, status: 'PRESENT' } });
@@ -187,6 +193,8 @@ export function deriveCard(
     for (const [label, severity] of [['Mild', 'MILD'], ['Moderate', 'MODERATE'], ['Severe', 'SEVERE']] as const) {
       if (o.attributes.severity !== severity) options.push({ label: `Severity: ${label}`, intent: { type: 'CORRECT_OBSERVATION', observationId: o.id, severity } });
     }
+  } else if (openPanel === 'REFERENCE' && listing) {
+    for (const c of causes) options.push({ label: c.name, intent: { type: 'SET_REFERENCE_CONDITION', condition: c.key } });
   } else if (openPanel === 'NOTE') {
     for (const note of PRESET_NOTES) {
       if (o.review.note !== note) options.push({ label: note, intent: { type: 'ANNOTATE_OBSERVATION', observationId: o.id, note } });
@@ -218,16 +226,27 @@ export function deriveCard(
       resolve: !isCondition && unresolved && o.conflicts_with.length > 0,
       correct: canCorrect,
       annotate: true,
-      reference: isCondition,
+      reference: canReference,
     },
     panel: openPanel,
+    referenceLabel: isCondition ? 'Tests & medicines' : 'Possible causes',
     reference:
       openPanel === 'REFERENCE'
-        ? {
-            testsLine: ref ? `Tests to consider: ${ref.tests.join('; ')}` : 'No reference entry for this condition yet.',
-            medicinesLine: ref ? `Medicine classes: ${ref.medicines.join('; ')}` : '',
-            notice: REFERENCE_NOTICE,
-          }
+        ? listing
+          ? {
+              heading: `Commonly considered causes of ${observationName(o).toLowerCase()}`,
+              testsLine: 'Choose one to see its tests and medicine classes. These are prompts for the doctor, not a diagnosis.',
+              medicinesLine: '',
+              notice: REFERENCE_NOTICE,
+              backToList: false,
+            }
+          : {
+              heading: ref && !isCondition ? `${ref.name} (possible cause of ${observationName(o).toLowerCase()})` : 'Educational reference',
+              testsLine: ref ? `Tests to consider: ${ref.tests.join('; ')}` : 'No reference entry for this condition yet.',
+              medicinesLine: ref ? `Medicine classes: ${ref.medicines.join('; ')}` : '',
+              notice: REFERENCE_NOTICE,
+              backToList: !isCondition,
+            }
         : null,
     options,
   };

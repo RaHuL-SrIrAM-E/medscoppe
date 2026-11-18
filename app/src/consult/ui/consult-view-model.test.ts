@@ -75,7 +75,7 @@ describe('card', () => {
       evidenceLabel: 'Patient said',
     });
     expect(card.evidenceQuote).toBe('"I\'ve been coughing for about five days"');
-    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false, correct: true, annotate: true, reference: false });
+    expect(card.actions).toEqual({ confirm: true, reject: true, resolve: false, correct: true, annotate: true, reference: true });
   });
 
   it('a confirmed observation no longer offers Confirm and says it was an explicit action', () => {
@@ -107,9 +107,38 @@ describe('card', () => {
     expect(card.confirmed).toBe(false);
   });
 
-  it('a symptom has no reference view', () => {
+  it('a present symptom lists commonly considered causes, then one cause shows its tests and medicine classes', () => {
     const s = full();
-    expect(deriveCard(s, [], visibleObservations(s)[0]!.id, 'REFERENCE')!.reference).toBeNull();
+    const cough = visibleObservations(s).find((o) => o.symptom === 'COUGH')!;
+    const list = deriveCard(s, [], cough.id, 'REFERENCE')!;
+    expect(list.referenceLabel).toBe('Possible causes');
+    expect(list.reference!.heading).toBe('Commonly considered causes of cough');
+    expect(list.reference!.backToList).toBe(false);
+    expect(list.options.map((o) => o.label)).toEqual(['Pneumonia', 'Bronchitis', 'Asthma', 'COPD', 'Tuberculosis']);
+    expect(list.options[0]!.intent).toEqual({ type: 'SET_REFERENCE_CONDITION', condition: 'pneumonia' });
+    const one = deriveCard(s, [], cough.id, 'REFERENCE', 'pneumonia')!;
+    expect(one.reference!.heading).toBe('Pneumonia (possible cause of cough)');
+    expect(one.reference!.testsLine).toMatch(/Chest X-ray/);
+    expect(one.reference!.backToList).toBe(true);
+    expect(one.options).toEqual([]);
+    expect(one.confirmed).toBe(false);
+  });
+
+  it('a cause that is not offered for the symptom is ignored, and an absent symptom has no reference', () => {
+    const s = full();
+    const cough = visibleObservations(s).find((o) => o.symptom === 'COUGH')!;
+    expect(deriveCard(s, [], cough.id, 'REFERENCE', 'migraine')!.reference!.heading).toMatch(/^Commonly considered causes/);
+    const noPain = visibleObservations(s).find((o) => o.symptom === 'CHEST_PAIN')!;
+    expect(deriveCard(s, [], noPain.id, 'REFERENCE')!.reference).toBeNull();
+    expect(deriveCard(s, [], noPain.id)!.actions.reference).toBe(false);
+  });
+
+  it('no reference text contains a dose', () => {
+    const s = full();
+    for (const o of visibleObservations(s)) {
+      const c = deriveCard(s, [], o.id, 'REFERENCE')!;
+      expect((c.reference?.testsLine ?? '') + (c.reference?.medicinesLine ?? '')).not.toMatch(/\d+\s?(mg|ml|mcg)/i);
+    }
   });
 
   it('systemic observations are not given an anatomical location', () => {
